@@ -33,32 +33,34 @@ function Login({ onLogin }) {
     setError('')
 
     try {
-      // Step 1: Get JWT token
+      // Step 1: Get JWT token via POST with form data
+      const formData = new URLSearchParams()
+      formData.append('email', email)
+      formData.append('password', password)
+
       const tokenRes = await fetch(`${WP_URL}/wp-json/simple-jwt-login/v1/auth`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
       })
+
       const tokenData = await tokenRes.json()
+      console.log('Auth response:', tokenData)
 
       if (!tokenData.data?.jwt) {
-        setError('Invalid email or password. Please check your credentials.')
+        setError(tokenData.message || 'Invalid email or password. Please check your credentials.')
         setLoading(false)
         return
       }
 
       const jwt = tokenData.data.jwt
 
-      // Step 2: Verify user has purchased the product
-      const orderRes = await fetch(`${WP_URL}/wp-json/wc/v3/orders?customer_email=${encodeURIComponent(email)}&status=completed`, {
-        headers: { 'Authorization': `Bearer ${jwt}` }
-      })
-
-      // Step 3: Check user info
+      // Step 2: Get user info using JWT in header
       const userRes = await fetch(`${WP_URL}/wp-json/wp/v2/users/me`, {
         headers: { 'Authorization': `Bearer ${jwt}` }
       })
       const userData = await userRes.json()
+      console.log('User response:', userData)
 
       if (!userData.id) {
         setError('Could not verify your account. Please try again.')
@@ -66,7 +68,7 @@ function Login({ onLogin }) {
         return
       }
 
-      onLogin({ email, name: userData.name || email.split('@')[0], jwt })
+      onLogin({ email, name: userData.name || userData.slug || email.split('@')[0], jwt })
     } catch (err) {
       setError('Connection error. Please check your internet and try again.')
     }
