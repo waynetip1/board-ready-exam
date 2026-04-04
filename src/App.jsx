@@ -261,16 +261,12 @@ function QuestionNav({ total, current, answers, onJump }) {
   )
 }
 
-function ExamScreen({ mode, topic, onSubmit, onHome }) {
+function ExamScreen({ mode, topic, examQuestions, onSubmit, onHome }) {
   const totalTime = (mode === 'full' || mode === 'resume') ? EXAM_MINUTES * 60 : null
   const saved = mode === 'resume' ? load('brb_session') : null
 
-  const [examQs] = useState(() => {
-    if (mode === 'resume' && saved?.questions) return saved.questions
-    if (mode === 'pretest') return buildPreTest()
-    if (mode === 'topic') return buildTopicTest(topic)
-    return buildFullExam()
-  })
+  // Use questions passed from parent (stable, generated once in App)
+  const examQs = examQuestions || []
   const [current, setCurrent] = useState(saved?.current || 0)
   const [answers, setAnswers] = useState(saved?.answers || {})
   const [timeLeft, setTimeLeft] = useState(saved?.timeLeft ?? totalTime)
@@ -435,13 +431,28 @@ export default function App() {
   const [examMode, setExamMode] = useState(null)
   const [examTopic, setExamTopic] = useState(null)
   const [results, setResults] = useState(null)
+  const [examQuestions, setExamQuestions] = useState(null)
 
   const handleLogin = (u) => { setUser(u); setScreen('dashboard') }
   const handleLogout = () => { setUser(null); setScreen('login'); setResults(null) }
   const handleNav = (s) => { if (['dashboard', 'stats'].includes(s)) { setScreen(s); setResults(null) } }
 
   const handleStart = (mode, topic = null) => {
-    setExamMode(mode); setExamTopic(topic); setResults(null); setScreen('exam')
+    setExamMode(mode)
+    setExamTopic(topic)
+    setResults(null)
+    // Generate questions in parent so they are stable across renders
+    if (mode === 'resume') {
+      const saved = load('brb_session')
+      setExamQuestions(saved?.questions || buildFullExam())
+    } else if (mode === 'pretest') {
+      setExamQuestions(buildPreTest())
+    } else if (mode === 'topic') {
+      setExamQuestions(buildTopicTest(topic))
+    } else {
+      setExamQuestions(buildFullExam())
+    }
+    setScreen('exam')
   }
 
   const handleSubmit = async (answers, qs, mode, topic) => {
@@ -475,7 +486,7 @@ export default function App() {
       {screen === 'login' && <Login onLogin={handleLogin} />}
       {screen === 'dashboard' && <Dashboard user={user} onStart={handleStart} />}
       {screen === 'stats' && <StatsPage />}
-      {screen === 'exam' && <ExamScreen mode={examMode} topic={examTopic} onSubmit={handleSubmit} onHome={() => setScreen('dashboard')} />}
+      {screen === 'exam' && <ExamScreen mode={examMode} topic={examTopic} examQuestions={examQuestions} onSubmit={handleSubmit} onHome={() => setScreen('dashboard')} />}
       {screen === 'grading' && <Grading />}
       {screen === 'results' && <Results results={results} mode={examMode} topic={examTopic} onRetake={() => handleStart(examMode, examTopic)} onHome={() => setScreen('dashboard')} />}
     </>
