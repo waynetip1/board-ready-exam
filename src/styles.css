@@ -509,3 +509,41 @@ body {
   .question-card { padding: 20px; }
   .exam-topbar { flex-direction: column; gap: 8px; text-align: center; }
 }
+
+/* DASHBOARD */
+.dash-card {
+  background: white;
+  border: 1px solid #ecd5db;
+  border-radius: 14px;
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dash-card:hover {
+  border-color: #C0506A;
+  box-shadow: 0 4px 16px rgba(139,32,64,0.1);
+  transform: translateY(-2px);
+}
+.dash-card-icon { font-size: 1.6rem; margin-bottom: 10px; }
+.dash-card-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: #8B2040; font-weight: 700; margin-bottom: 6px; }
+.dash-card-desc { font-size: 0.82rem; color: #7a5560; line-height: 1.5; }
+.dash-card-action { font-size: 0.82rem; color: #C0506A; font-weight: 600; margin-top: 12px; }
+
+/* TOPIC CARDS */
+.topic-card {
+  background: #FDF6F8;
+  border: 1px solid #ecd5db;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.topic-card:hover {
+  border-color: #C0506A;
+  background: #F9D8E6;
+}
+
+@media (max-width: 600px) {
+  .dash-card { padding: 18px 14px; }
+  div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
