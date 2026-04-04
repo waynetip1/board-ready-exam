@@ -3,17 +3,64 @@ export default async function handler(req, res) {
 
   const { answers, questions } = req.body
 
-  const wrongAnswers = questions.filter((q, i) => answers[i] !== q.correct)
+  if (!questions || !Array.isArray(questions)) {
+    return res.status(400).json({ error: 'Invalid request' })
+  }
 
-  const wrongSummary = wrongAnswers.map((q, i) =>
-    `Q: ${q.question}\nStudent answered: ${q.options[answers[questions.indexOf(q)]]}\nCorrect answer: ${q.options[q.correct]}`
-  ).join('\n\n')
+  let correct = 0
+  const wrongAnswers = []
+
+  questions.forEach((q, i) => {
+    const userAnswer = answers[i]
+    if (userAnswer === q.correct) {
+      correct++
+    } else {
+      wrongAnswers.push({
+        question: q.question,
+        topic: q.topic,
+        userAnswer: userAnswer !== undefined ? q.options[userAnswer] : 'Not answered',
+        correctAnswer: q.options[q.correct]
+      })
+    }
+  })
+
+  const score = Math.round((correct / questions.length) * 100)
+  const passed = score >= 75
 
   const topicCounts = {}
   wrongAnswers.forEach(q => {
     topicCounts[q.topic] = (topicCounts[q.topic] || 0) + 1
   })
-  const weakTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).map(([t]) => t)
+  const weakTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([t]) => t)
+
+  if (wrongAnswers.length === 0) {
+    return res.status(200).json({
+      score, correct, total: questions.length, passed, weakTopics: [],
+      explanations: [],
+      studyGuide: { intro: 'Perfect score! You have an excellent grasp of the material.', topics: [] }
+    })
+  }
+
+  const wrongSummary = wrongAnswers.slice(0, 20).map(q =>
+    `Q: ${q.question}\nStudent answered: ${q.userAnswer}\nCorrect answer: ${q.correctAnswer}`
+  ).join('\n\n')
+
+  const fallback = {
+    score, correct, total: questions.length, passed, weakTopics,
+    explanations: wrongAnswers.slice(0, 15).map(q => ({
+      question: q.question,
+      explanation: `The correct answer is: ${q.correctAnswer}`,
+      tip: `Review the topic: ${q.topic}`
+    })),
+    studyGuide: {
+      intro: `You scored ${score}%. Focus on reviewing your weak topics before the exam.`,
+      topics: weakTopics.map(t => ({
+        name: t,
+        keyPoints: [`Review all ${t} material`, 'Focus on key definitions', 'Practice with flashcards'],
+        examTip: `Pay close attention to ${t} questions on the exam.`
+      }))
+    }
+  }
 
   try {
     const gradeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -28,19 +75,14 @@ export default async function handler(req, res) {
         max_tokens: 4000,
         messages: [{
           role: 'user',
-          content: `You are a Texas cosmetology exam coach. A student just completed their practice written exam.
+          content: `You are a Texas cosmetology exam coach. Student scored ${score}% (${correct}/${questions.length}).
 
 Wrong answers:
 ${wrongSummary}
 
-For each wrong answer, provide:
-1. A clear explanation of why the correct answer is right
-2. A memory tip to remember it
+Weak topics: ${weakTopics.join(', ')}
 
-Then write a PERSONALIZED STUDY GUIDE covering these weak topics: ${weakTopics.join(', ')}.
-The study guide should be concise, practical, and focused on what they need to pass the Texas TDLR/PSI cosmetology written exam.
-
-Format your response as JSON like this:
+Respond ONLY with valid JSON, no markdown, no extra text:
 {
   "explanations": [
     { "question": "...", "explanation": "...", "tip": "..." }
@@ -56,21 +98,25 @@ Format your response as JSON like this:
       })
     })
 
-    const data = await gradeRes.json()
-    const text = data.content[0].text
-    const clean = text.replace(/```json|```/g, '').trim()
-    const parsed = JSON.parse(clean)
+    if (!gradeRes.ok) {
+      console.error('Claude API error:', gradeRes.status)
+      return res.status(200).json(fallback)
+    }
 
-    res.status(200).json({
-      score: Math.round(((questions.length - wrongAnswers.length) / questions.length) * 100),
-      correct: questions.length - wrongAnswers.length,
-      total: questions.length,
-      passed: ((questions.length - wrongAnswers.length) / questions.length) >= 0.75,
-      weakTopics,
-      ...parsed
-    })
+    const data = await gradeRes.json()
+    const text = data.content?.[0]?.text || ''
+
+    try {
+      const clean = text.replace(/```json|```/g, '').trim()
+      const parsed = JSON.parse(clean)
+      return res.status(200).json({ score, correct, total: questions.length, passed, weakTopics, ...parsed })
+    } catch (e) {
+      console.error('JSON parse error:', e)
+      return res.status(200).json(fallback)
+    }
+
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Grading failed' })
+    console.error('Grading error:', err)
+    return res.status(200).json(fallback)
   }
 }
