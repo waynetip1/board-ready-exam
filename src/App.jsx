@@ -2,11 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { questions } from './questions.js'
 
 const EXAM_MINUTES = 90
+const TOPICS = [...new Set(questions.map(q => q.topic))]
 
-function Header({ user, onLogout }) {
+// Storage helpers
+const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)) } catch(e) {} }
+const load = (key) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null } catch(e) { return null } }
+const clear = (key) => { try { localStorage.removeItem(key) } catch(e) {} }
+
+function Header({ user, onLogout, onHome }) {
   return (
     <div className="header">
-      <div>
+      <div style={{ cursor: user ? 'pointer' : 'default' }} onClick={user ? onHome : undefined}>
         <div className="header-logo">Board Ready Beauty</div>
         <div className="header-sub">Written Exam Prep</div>
       </div>
@@ -72,37 +78,143 @@ function Login({ onLogin }) {
   )
 }
 
-function ExamIntro({ user, onStart }) {
+function Dashboard({ user, onStart }) {
+  const hasSaved = !!load('brb_session')
+  const history = load('brb_history') || []
+  const lastScore = history.length > 0 ? history[history.length - 1] : null
+  const topicAttempts = load('brb_topic_attempts') || {}
+
   return (
-    <div className="intro-wrap">
-      <div className="intro-card">
-        <div className="intro-title">Ready to practice?</div>
-        <div className="intro-sub">Welcome back, {user.name}. This timed practice exam mirrors the real Texas PSI written exam.</div>
-        <div className="intro-stats">
-          <div className="stat-box"><div className="stat-num">120</div><div className="stat-label">Questions</div></div>
-          <div className="stat-box"><div className="stat-num">90</div><div className="stat-label">Minutes</div></div>
-          <div className="stat-box"><div className="stat-num">75%</div><div className="stat-label">To Pass</div></div>
+    <div className="intro-wrap" style={{ maxWidth: '720px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <div className="intro-title">Welcome back, {user.name.split('.')[0]}!</div>
+        <div className="intro-sub">What would you like to do today?</div>
+      </div>
+
+      {hasSaved && (
+        <div style={{ background: '#fff8e6', border: '1px solid #f0d080', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontWeight: '600', color: '#8B6000', fontSize: '0.95rem' }}>You have an exam in progress</div>
+            <div style={{ fontSize: '0.85rem', color: '#a07800', marginTop: '2px' }}>Continue where you left off</div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => { clear('brb_session'); onStart('full') }}>Start Fresh</button>
+            <button className="btn-next" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => onStart('resume')}>Resume</button>
+          </div>
         </div>
-        <div style={{ marginBottom: '24px', fontSize: '0.9rem', color: '#7a5560', lineHeight: '1.7' }}>
-          <strong style={{ color: '#8B2040' }}>Topics covered:</strong> Sanitation & Infection Control, Hair Care & Chemistry, Scalp & Hair Disorders, Skin Care & Anatomy, Nail Care, Chemical Services, Texas TDLR Laws & Regulations, Coloring & Lightening, Haircutting & Styling, Anatomy & Physiology, and more.
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div className="dash-card" onClick={() => onStart('pretest')}>
+          <div className="dash-card-icon">🎯</div>
+          <div className="dash-card-title">Pre-Test Diagnostic</div>
+          <div className="dash-card-desc">30 questions · No timer · Identify weak areas</div>
+          <div className="dash-card-action">Start Pre-Test →</div>
         </div>
-        <div style={{ background: '#FDF6F8', border: '1px solid #ecd5db', borderRadius: '10px', padding: '16px', marginBottom: '28px', fontSize: '0.85rem', color: '#7a5560' }}>
-          After the exam: Claude AI will grade your answers, explain every wrong answer, and generate a personalized study guide.
+
+        <div className="dash-card" onClick={() => !hasSaved && onStart('full')}>
+          <div className="dash-card-icon">📝</div>
+          <div className="dash-card-title">Full Practice Exam</div>
+          <div className="dash-card-desc">120 questions · 90 min · Mirrors real PSI exam</div>
+          {lastScore && <div style={{ fontSize: '0.78rem', color: '#8B2040', marginTop: '4px' }}>Last score: {lastScore.score}%</div>}
+          <div className="dash-card-action">Start Exam →</div>
         </div>
-        <button className="btn-primary" onClick={onStart}>Start Exam</button>
+      </div>
+
+      <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px' }}>
+        <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '14px', fontSize: '0.95rem' }}>Focused Topic Tests</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+          {TOPICS.map(topic => {
+            const attempts = topicAttempts[topic] || 0
+            return (
+              <div key={topic} className="topic-card" onClick={() => onStart('topic', topic)}>
+                <div style={{ fontSize: '0.88rem', fontWeight: '500', color: '#2d1a1f' }}>{topic}</div>
+                <div style={{ fontSize: '0.75rem', color: '#7a5560', marginTop: '3px' }}>
+                  {questions.filter(q => q.topic === topic).length}Q
+                  {attempts > 0 && ` · ${attempts} attempt${attempts > 1 ? 's' : ''}`}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {history.length > 0 && (
+        <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px', marginTop: '16px' }}>
+          <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '14px', fontSize: '0.95rem' }}>Recent Results</div>
+          {history.slice(-5).reverse().map((h, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < Math.min(history.length, 5) - 1 ? '1px solid #f0e0e5' : 'none', fontSize: '0.88rem' }}>
+              <span style={{ color: '#7a5560' }}>{h.type === 'full' ? 'Full Exam' : h.type === 'pretest' ? 'Pre-Test' : h.topic}</span>
+              <span style={{ fontWeight: '600', color: h.passed ? '#2d7a4f' : '#8B2040' }}>{h.score}% {h.passed ? '✓' : ''}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function QuestionNav({ total, current, answers, onJump }) {
+  return (
+    <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+      <div style={{ fontSize: '0.78rem', color: '#7a5560', marginBottom: '10px', fontWeight: '500' }}>Question Navigator</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        {Array.from({ length: total }, (_, i) => (
+          <button key={i} onClick={() => onJump(i)} style={{
+            width: '32px', height: '32px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600',
+            background: i === current ? '#8B2040' : answers[i] !== undefined ? '#F9D8E6' : '#f5f0f2',
+            color: i === current ? 'white' : answers[i] !== undefined ? '#8B2040' : '#7a5560',
+            outline: i === current ? '2px solid #8B2040' : 'none',
+            outlineOffset: '1px'
+          }}>
+            {i + 1}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '16px', marginTop: '10px', fontSize: '0.75rem', color: '#7a5560' }}>
+        <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#F9D8E6', marginRight: '4px' }}></span>Answered</span>
+        <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#f5f0f2', marginRight: '4px' }}></span>Unanswered</span>
       </div>
     </div>
   )
 }
 
-function Exam({ onSubmit }) {
-  const [current, setCurrent] = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [timeLeft, setTimeLeft] = useState(EXAM_MINUTES * 60)
+function ExamScreen({ mode, topic, onSubmit, onHome }) {
+  const examQuestions = mode === 'pretest'
+    ? TOPICS.map(t => {
+        const tqs = questions.filter(q => q.topic === t)
+        return tqs[Math.floor(Math.random() * tqs.length)]
+      }).filter(Boolean)
+    : mode === 'topic'
+    ? questions.filter(q => q.topic === topic)
+    : questions
 
-  const handleSubmit = useCallback(() => { onSubmit(answers) }, [answers, onSubmit])
+  const totalTime = mode === 'pretest' || mode === 'topic' ? null : EXAM_MINUTES * 60
 
+  // Load saved session for full exam resume
+  const saved = mode === 'resume' ? load('brb_session') : null
+  const [current, setCurrent] = useState(saved?.current || 0)
+  const [answers, setAnswers] = useState(saved?.answers || {})
+  const [timeLeft, setTimeLeft] = useState(saved?.timeLeft || totalTime)
+  const [showNav, setShowNav] = useState(false)
+
+  const actualQuestions = mode === 'resume' ? questions : examQuestions
+
+  const handleSubmit = useCallback(() => {
+    clear('brb_session')
+    onSubmit(answers, actualQuestions, mode, topic)
+  }, [answers, actualQuestions, mode, topic, onSubmit])
+
+  // Save session periodically for full exam
   useEffect(() => {
+    if (mode === 'full' || mode === 'resume') {
+      save('brb_session', { answers, current, timeLeft })
+    }
+  }, [answers, current, timeLeft, mode])
+
+  // Timer
+  useEffect(() => {
+    if (!totalTime) return
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { clearInterval(timer); handleSubmit(); return 0 }
@@ -110,25 +222,47 @@ function Exam({ onSubmit }) {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [handleSubmit])
+  }, [handleSubmit, totalTime])
 
-  const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0')
-  const secs = (timeLeft % 60).toString().padStart(2, '0')
-  const isWarning = timeLeft < 300
-  const q = questions[current]
+  const mins = timeLeft ? Math.floor(timeLeft / 60).toString().padStart(2, '0') : null
+  const secs = timeLeft ? (timeLeft % 60).toString().padStart(2, '0') : null
+  const isWarning = timeLeft && timeLeft < 300
+  const q = actualQuestions[current]
   const answered = Object.keys(answers).length
   const letters = ['A', 'B', 'C', 'D']
+
+  if (!q) return null
+
+  const modeLabel = mode === 'pretest' ? 'Pre-Test Diagnostic' : mode === 'topic' ? topic : 'Full Practice Exam'
 
   return (
     <div className="exam-wrap">
       <div className="exam-topbar">
-        <div className={`timer ${isWarning ? 'warning' : ''}`}>{mins}:{secs}</div>
-        <div className="progress-text">{current + 1} of {questions.length} &nbsp;·&nbsp; {answered} answered</div>
-        <button className="btn-next" onClick={handleSubmit} style={{ padding: '8px 20px', fontSize: '0.85rem' }}>Submit Exam</button>
+        <div>
+          <div style={{ fontSize: '0.75rem', color: '#7a5560', marginBottom: '2px' }}>{modeLabel}</div>
+          {timeLeft ? <div className={`timer ${isWarning ? 'warning' : ''}`}>{mins}:{secs}</div>
+            : <div style={{ fontSize: '0.9rem', color: '#8B2040', fontWeight: '600' }}>No time limit</div>}
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div className="progress-text">{current + 1} of {actualQuestions.length}</div>
+          <div style={{ fontSize: '0.78rem', color: '#7a5560' }}>{answered} answered</div>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn-secondary" style={{ padding: '8px 14px', fontSize: '0.82rem' }} onClick={() => setShowNav(v => !v)}>
+            {showNav ? 'Hide Map' : 'Question Map'}
+          </button>
+          <button className="btn-next" onClick={handleSubmit} style={{ padding: '8px 16px', fontSize: '0.82rem' }}>Submit</button>
+        </div>
       </div>
+
       <div className="progress-bar-wrap">
-        <div className="progress-bar-fill" style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
+        <div className="progress-bar-fill" style={{ width: `${((current + 1) / actualQuestions.length) * 100}%` }} />
       </div>
+
+      {showNav && (
+        <QuestionNav total={actualQuestions.length} current={current} answers={answers} onJump={i => { setCurrent(i); setShowNav(false) }} />
+      )}
+
       <div className="question-card">
         <div className="question-topic">{q.topic}</div>
         <div className="question-text">{q.question}</div>
@@ -141,11 +275,15 @@ function Exam({ onSubmit }) {
           ))}
         </div>
       </div>
+
       <div className="nav-row">
         <button className="btn-secondary" onClick={() => setCurrent(c => c - 1)} disabled={current === 0}>← Previous</button>
-        {current < questions.length - 1
+        <button className="btn-secondary" onClick={onHome} style={{ fontSize: '0.82rem', padding: '10px 16px' }}>
+          {mode === 'full' || mode === 'resume' ? '💾 Save & Exit' : 'Exit'}
+        </button>
+        {current < actualQuestions.length - 1
           ? <button className="btn-next" onClick={() => setCurrent(c => c + 1)}>Next →</button>
-          : <button className="btn-next" onClick={handleSubmit}>Submit Exam</button>}
+          : <button className="btn-next" onClick={handleSubmit}>Submit ✓</button>}
       </div>
     </div>
   )
@@ -163,7 +301,7 @@ function Grading() {
   )
 }
 
-function Results({ results, onRetake }) {
+function Results({ results, mode, topic, onRetake, onHome }) {
   return (
     <div className="results-wrap">
       <div className="score-card">
@@ -173,12 +311,13 @@ function Results({ results, onRetake }) {
         </div>
         <div className="result-title">{results.passed ? 'Great job!' : "You're getting there!"}</div>
         <div className="result-sub">
-          You answered {results.correct} out of {results.total} questions correctly.
-          {results.passed ? " You're on track to pass the real exam!" : ' A passing score is 75%. Review your study guide below and retake when ready.'}
+          {mode === 'pretest' ? 'Pre-Test Diagnostic · ' : mode === 'topic' ? `${topic} · ` : 'Full Practice Exam · '}
+          {results.correct} of {results.total} correct
+          {!results.passed && ' · Passing score is 75%'}
         </div>
         {results.weakTopics?.length > 0 && (
           <>
-            <div style={{ fontSize: '0.85rem', color: '#7a5560', marginBottom: '10px', fontWeight: '500' }}>Focus areas:</div>
+            <div style={{ fontSize: '0.85rem', color: '#7a5560', marginBottom: '10px', fontWeight: '500', marginTop: '16px' }}>Focus areas:</div>
             <div className="topics-grid">
               {results.weakTopics.map(t => <span key={t} className="topic-pill">{t}</span>)}
             </div>
@@ -193,7 +332,7 @@ function Results({ results, onRetake }) {
             <div key={i} className="explanation-card">
               <div className="explanation-q">{e.question}</div>
               <div className="explanation-text">{e.explanation}</div>
-              <div className="explanation-tip">Memory tip: {e.tip}</div>
+              <div className="explanation-tip">💡 Memory tip: {e.tip}</div>
             </div>
           ))}
         </div>
@@ -204,19 +343,20 @@ function Results({ results, onRetake }) {
           <div className="section-title">Your Personalized Study Guide</div>
           <div className="study-guide-card">
             <p style={{ color: '#7a5560', marginBottom: '24px', lineHeight: '1.7' }}>{results.studyGuide.intro}</p>
-            {results.studyGuide.topics?.map((topic, i) => (
+            {results.studyGuide.topics?.map((t, i) => (
               <div key={i} className="study-topic">
-                <div className="study-topic-name">{topic.name}</div>
-                <ul className="study-points">{topic.keyPoints?.map((pt, j) => <li key={j}>{pt}</li>)}</ul>
-                {topic.examTip && <div className="exam-tip">Exam tip: {topic.examTip}</div>}
+                <div className="study-topic-name">{t.name}</div>
+                <ul className="study-points">{t.keyPoints?.map((pt, j) => <li key={j}>{pt}</li>)}</ul>
+                {t.examTip && <div className="exam-tip">Exam tip: {t.examTip}</div>}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div style={{ textAlign: 'center', paddingBottom: '40px' }}>
-        <button className="btn-primary" onClick={onRetake} style={{ maxWidth: '300px' }}>Retake Exam</button>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', paddingBottom: '40px', flexWrap: 'wrap' }}>
+        <button className="btn-secondary" onClick={onHome} style={{ minWidth: '160px' }}>← Dashboard</button>
+        <button className="btn-primary" onClick={onRetake} style={{ maxWidth: '240px' }}>Retake</button>
       </div>
     </div>
   )
@@ -225,37 +365,59 @@ function Results({ results, onRetake }) {
 export default function App() {
   const [user, setUser] = useState(null)
   const [screen, setScreen] = useState('login')
+  const [examMode, setExamMode] = useState(null)
+  const [examTopic, setExamTopic] = useState(null)
   const [results, setResults] = useState(null)
 
-  const handleLogin = (userData) => { setUser(userData); setScreen('intro') }
+  const handleLogin = (userData) => { setUser(userData); setScreen('dashboard') }
   const handleLogout = () => { setUser(null); setScreen('login'); setResults(null) }
-  const handleStart = () => setScreen('exam')
+  const handleHome = () => { setScreen('dashboard'); setResults(null) }
 
-  const handleSubmit = async (answers) => {
+  const handleStart = (mode, topic = null) => {
+    setExamMode(mode)
+    setExamTopic(topic)
+    setResults(null)
+    setScreen('exam')
+  }
+
+  const handleSubmit = async (answers, qs, mode, topic) => {
     setScreen('grading')
     try {
       const res = await fetch('/api/grade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, questions })
+        body: JSON.stringify({ answers, questions: qs })
       })
       const data = await res.json()
+
+      // Save to history
+      const history = load('brb_history') || []
+      history.push({ score: data.score, passed: data.passed, type: mode, topic, date: new Date().toISOString() })
+      save('brb_history', history)
+
+      // Track topic attempts
+      if (mode === 'topic' && topic) {
+        const attempts = load('brb_topic_attempts') || {}
+        attempts[topic] = (attempts[topic] || 0) + 1
+        save('brb_topic_attempts', attempts)
+      }
+
       setResults(data)
       setScreen('results')
     } catch {
       alert('Grading failed. Please try again.')
-      setScreen('intro')
+      setScreen('dashboard')
     }
   }
 
   return (
     <>
-      <Header user={user} onLogout={handleLogout} />
+      <Header user={user} onLogout={handleLogout} onHome={handleHome} />
       {screen === 'login' && <Login onLogin={handleLogin} />}
-      {screen === 'intro' && <ExamIntro user={user} onStart={handleStart} />}
-      {screen === 'exam' && <Exam onSubmit={handleSubmit} />}
+      {screen === 'dashboard' && <Dashboard user={user} onStart={handleStart} />}
+      {screen === 'exam' && <ExamScreen mode={examMode} topic={examTopic} onSubmit={handleSubmit} onHome={handleHome} />}
       {screen === 'grading' && <Grading />}
-      {screen === 'results' && <Results results={results} onRetake={() => { setResults(null); setScreen('intro') }} />}
+      {screen === 'results' && <Results results={results} mode={examMode} topic={examTopic} onRetake={() => handleStart(examMode, examTopic)} onHome={handleHome} />}
     </>
   )
 }
