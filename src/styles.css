@@ -547,3 +547,27 @@ body {
   .dash-card { padding: 18px 14px; }
   div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
 }
+
+/* FEEDBACK MODE ANSWER STATES */
+.option-btn.correct-answer {
+  border-color: #2d7a4f !important;
+  background: #e8f5ee !important;
+  color: #1a5c38 !important;
+}
+.option-btn.correct-answer .option-letter {
+  background: #2d7a4f !important;
+  color: white !important;
+}
+.option-btn.wrong-answer {
+  border-color: #c0392b !important;
+  background: #ffeaea !important;
+  color: #8b0000 !important;
+}
+.option-btn.wrong-answer .option-letter {
+  background: #c0392b !important;
+  color: white !important;
+}
+.option-btn:disabled {
+  cursor: default !important;
+  opacity: 1 !important;
+}
