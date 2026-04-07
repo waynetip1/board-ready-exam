@@ -9,50 +9,108 @@ export default async function handler(req, res) {
   }).join('\n')
 
   try {
-    const res2 = await fetch('https://api.anthropic.com/v1/messages', {
+    const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 6000,
+        max_tokens: 8000,
         messages: [{
           role: 'user',
-          content: `You are an expert Texas cosmetology exam coach creating a comprehensive personalized study guide for the PSI TDLR written exam.
+          content: `You are creating a world-class study guide for a student preparing for the Texas PSI TDLR cosmetology written exam.
 
-Student performance data:
+STUDENT DATA:
 - Overall accuracy: ${overallPct}%
 - Full exams completed: ${examCount}
 - Total questions answered: ${totalAnswered}
-
-Topic breakdown:
+- Topic breakdown:
 ${topicSummary}
 
-Create a comprehensive study guide. Respond ONLY with valid JSON, no markdown:
+GUIDE PHILOSOPHY:
+This guide must be genuinely excellent — not a generic list of facts. Follow these principles:
+
+1. PLAIN ENGLISH FIRST: Explain every concept in simple, everyday language. Write as if explaining to a smart friend who is not a cosmetologist. Use short sentences. Avoid jargon — and when you must use a technical term, always explain it immediately in plain English in parentheses.
+
+2. ESL-FRIENDLY: Many students speak English as a second language. Use consistent, simple vocabulary. Avoid idioms that don't translate well. But never talk down to the reader — respect their intelligence.
+
+3. REAL-WORLD ANALOGIES: Connect every concept to something students already know from everyday life. Examples: "Think of disinfection like washing dishes — it removes most germs but not all. Sterilization is like a hospital operating room — zero germs, period." These analogies make concepts stick.
+
+4. MEMORY ANCHORS: For every key fact, give a vivid memory trick. Use:
+   - Acronyms (e.g., "Remember pH with 'Potential Hydrogen'")
+   - Visual associations (e.g., "Picture staphylococci as a bunch of grapes — staph = grapes")
+   - Stories or scenarios
+   - Rhymes or patterns when natural
+   - The "why" behind facts (understanding beats memorizing)
+
+5. EXAM INTELLIGENCE: This is the Texas PSI TDLR cosmetology written exam. Call out:
+   - Exact language the exam uses
+   - Common trick questions and how to spot them
+   - What examiners are really testing
+   - Which topics appear most frequently
+   - Common wrong answers students choose and why
+
+6. PRIORITIZE WEAK AREAS: Give significantly more depth to topics where the student scored below 75%. For strong topics, reinforce with quick review. For weak topics, go deep with multiple explanations and extra memory tricks.
+
+7. SPACED REPETITION GUIDANCE: At the end of each section, include 3 quick self-check questions the student can use to test themselves without looking. These should mirror PSI exam question style.
+
+8. REFERENCES: Where relevant, cite the source of the standard:
+   - Texas Occupations Code for legal/regulatory content
+   - EPA guidelines for disinfection
+   - OSHA standards for safety
+   - TDLR rules for Texas-specific requirements
+   - Standard cosmetology textbook principles (Milady, Pivot Point)
+
+Respond ONLY with valid JSON, no markdown, no extra text:
 {
-  "intro": "2-3 sentence personalized intro based on their performance",
+  "intro": "2-3 warm, encouraging sentences personalized to their performance. Be specific about what they've accomplished and what to focus on. Use plain English.",
+  "howToUseThisGuide": "2-3 sentences explaining the best way to study this guide — spaced repetition, self-testing, etc.",
   "sections": [
     {
-      "topic": "topic name",
+      "topic": "exact topic name",
       "mastery": "Strong|Developing|Needs Work",
-      "overview": "2-3 sentence overview of this topic and its importance on the exam",
-      "keyPoints": ["key fact 1", "key fact 2", "key fact 3", "key fact 4", "key fact 5"],
-      "weakAreas": ["specific area to focus on if mastery is Developing or Needs Work"],
-      "examTip": "specific actionable tip for this topic on the PSI exam"
+      "score": 85,
+      "plainEnglishOverview": "2-3 sentence explanation of what this topic is really about in everyday language. Include a real-world analogy.",
+      "whyItMatters": "1-2 sentences on why this topic matters for the actual exam and real salon work.",
+      "keyConcepts": [
+        {
+          "concept": "concept name",
+          "explanation": "plain English explanation, 1-3 sentences",
+          "analogy": "real-world analogy to make it memorable",
+          "memoryTrick": "specific memory anchor — acronym, visual, story, or rhyme",
+          "examAlert": "what the exam specifically tests about this — common trick questions or phrasing to watch for"
+        }
+      ],
+      "examWarnings": ["specific warning about tricky exam questions on this topic", "another common mistake"],
+      "reference": "e.g., TDLR Rule 83.100 / Milady Standard Cosmetology Ch.5 / EPA DIS/TSS-1",
+      "selfCheck": [
+        {"question": "PSI-style question", "answer": "correct answer with brief explanation"}
+      ]
     }
   ],
-  "finalNotes": "2-3 sentences of encouragement and final exam day advice"
+  "studySchedule": "Practical 3-5 day study schedule recommendation based on their weak areas",
+  "examDayTips": ["specific actionable tip for exam day", "another tip", "another tip"],
+  "finalNotes": "2-3 warm, motivating sentences. Be genuine and specific."
 }`
         }]
       })
     })
 
-    if (!res2.ok) return res.status(500).json({ error: 'Guide generation failed' })
-    const data = await res2.json()
+    if (!apiRes.ok) {
+      const errText = await apiRes.text()
+      console.error('Claude API error:', apiRes.status, errText)
+      return res.status(500).json({ error: 'Guide generation failed' })
+    }
+
+    const data = await apiRes.json()
     const text = data.content?.[0]?.text || ''
     const guide = JSON.parse(text.replace(/```json|```/g, '').trim())
     res.status(200).json({ guide })
   } catch (err) {
     console.error('Study guide error:', err)
-    res.status(500).json({ error: 'Failed to generate study guide' })
+    res.status(500).json({ error: 'Failed to generate study guide. Please try again.' })
   }
 }
