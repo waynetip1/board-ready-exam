@@ -84,14 +84,18 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn }) {
           <div className="intro-title">Welcome back, {(user.name || '').split('.')[0] || 'Student'}!</div>
           <div className="intro-sub">What would you like to study today?</div>
         </div>
-        <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div>
-            <div style={{ fontSize: '0.82rem', fontWeight: '600', color: '#2d1a1f' }}>Real-Time Feedback</div>
-            <div style={{ fontSize: '0.73rem', color: '#7a5560' }}>{feedbackOn ? 'Answer feedback after each question' : 'Classic mode — feedback at end'}</div>
+        <div onClick={() => { setFeedbackOn(!feedbackOn); save('brb_feedback', !feedbackOn) }}
+          style={{ background: feedbackOn ? '#FDF0F3' : 'white', border: `2px solid ${feedbackOn ? '#8B2040' : '#ecd5db'}`, borderRadius: '14px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s', minWidth: '220px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: feedbackOn ? '#8B2040' : '#2d1a1f', marginBottom: '2px' }}>
+              {feedbackOn ? '✓ Real-Time Feedback ON' : 'Real-Time Feedback OFF'}
+            </div>
+            <div style={{ fontSize: '0.73rem', color: feedbackOn ? '#C0506A' : '#7a5560', lineHeight: 1.4 }}>
+              {feedbackOn ? 'See correct/wrong after each answer' : 'Classic mode — review at end'}
+            </div>
           </div>
-          <div onClick={() => { setFeedbackOn(!feedbackOn); save('brb_feedback', !feedbackOn) }}
-            style={{ width: '44px', height: '24px', borderRadius: '12px', background: feedbackOn ? '#8B2040' : '#d0c0c5', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: feedbackOn ? '22px' : '2px', transition: 'left 0.2s' }} />
+          <div style={{ width: '48px', height: '26px', borderRadius: '13px', background: feedbackOn ? '#8B2040' : '#d0c0c5', position: 'relative', transition: 'background 0.2s', flexShrink: 0, boxShadow: feedbackOn ? '0 2px 8px rgba(139,32,64,0.3)' : 'none' }}>
+            <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: feedbackOn ? '24px' : '2px', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
           </div>
         </div>
       </div>
@@ -200,23 +204,55 @@ function FeedbackOverlay({ question, selectedIndex, onNext }) {
 }
 
 function QuestionNav({ total, current, answers, confirmed, onJump }) {
+  const hasFeedback = confirmed && Object.keys(confirmed).length > 0
   return (
-    <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-      <div style={{ fontSize: '0.78rem', color: '#7a5560', marginBottom: '10px', fontWeight: '500' }}>Question Navigator</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-        {Array.from({ length: total }, (_, i) => (
-          <button key={i} onClick={() => onJump(i)} style={{
-            width: '30px', height: '30px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '600',
-            background: i === current ? '#8B2040' : confirmed?.[i] !== undefined ? (confirmed[i] ? '#c8ecd6' : '#ffd5d5') : answers[i] !== undefined ? '#F9D8E6' : '#f5f0f2',
-            color: i === current ? 'white' : '#555',
-          }}>{i + 1}</button>
-        ))}
+    <div style={{ background: 'white', border: '1.5px solid #ecd5db', borderRadius: '14px', padding: '18px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(139,32,64,0.06)' }}>
+      <div style={{ fontSize: '0.8rem', color: '#8B2040', marginBottom: '14px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Question Map</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+        {Array.from({ length: total }, (_, i) => {
+          const isCurrentQ = i === current
+          const isConfirmedCorrect = confirmed?.[i] === true
+          const isConfirmedWrong = confirmed?.[i] === false
+          const isAnswered = answers[i] !== undefined
+          let bg = '#ede8ea'
+          let color = '#999'
+          let border = '2px solid transparent'
+          let shadow = 'none'
+          if (isCurrentQ) { bg = '#8B2040'; color = 'white'; border = '2px solid #8B2040'; shadow = '0 2px 8px rgba(139,32,64,0.4)' }
+          else if (isConfirmedCorrect) { bg = '#2d7a4f'; color = 'white'; border = '2px solid #2d7a4f' }
+          else if (isConfirmedWrong) { bg = '#c0392b'; color = 'white'; border = '2px solid #c0392b' }
+          else if (isAnswered) { bg = '#F9D8E6'; color = '#8B2040'; border = '2px solid #E8809A' }
+          return (
+            <button key={i} onClick={() => onJump(i)} title={`Question ${i + 1}${isConfirmedCorrect ? ' ✓ Correct' : isConfirmedWrong ? ' ✗ Wrong' : isAnswered ? ' — Answered' : ' — Unanswered'}`} style={{
+              width: '34px', height: '34px', borderRadius: '8px', border, cursor: 'pointer',
+              fontSize: '0.75rem', fontWeight: '700', background: bg, color, boxShadow: shadow,
+              transition: 'all 0.15s', position: 'relative'
+            }}>
+              {i + 1}
+              {isConfirmedCorrect && <span style={{ position: 'absolute', top: '-4px', right: '-4px', fontSize: '0.55rem', background: 'white', borderRadius: '50%', width: '12px', height: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2d7a4f', fontWeight: '900', lineHeight: 1 }}>✓</span>}
+              {isConfirmedWrong && <span style={{ position: 'absolute', top: '-4px', right: '-4px', fontSize: '0.55rem', background: 'white', borderRadius: '50%', width: '12px', height: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c0392b', fontWeight: '900', lineHeight: 1 }}>✗</span>}
+            </button>
+          )
+        })}
       </div>
-      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '0.72rem', color: '#7a5560', flexWrap: 'wrap' }}>
-        <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#c8ecd6', marginRight: '3px' }}></span>Correct</span>
-        <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#ffd5d5', marginRight: '3px' }}></span>Incorrect</span>
-        <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#F9D8E6', marginRight: '3px' }}></span>Answered</span>
-        <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '2px', background: '#f5f0f2', marginRight: '3px' }}></span>Unanswered</span>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', padding: '10px 12px', background: '#fdf6f8', borderRadius: '8px' }}>
+        <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#8B2040', display: 'inline-block' }}></span>Current
+        </span>
+        {hasFeedback && <>
+          <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#2d7a4f', display: 'inline-block' }}></span>Correct
+          </span>
+          <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#c0392b', display: 'inline-block' }}></span>Wrong
+          </span>
+        </>}
+        <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#F9D8E6', border: '1.5px solid #E8809A', display: 'inline-block' }}></span>Answered
+        </span>
+        <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#ede8ea', display: 'inline-block' }}></span>Unanswered
+        </span>
       </div>
     </div>
   )
@@ -442,32 +478,101 @@ function StudyGuidePage({ onHome }) {
   const downloadPDF = () => {
     if (!guide) return
     const win = window.open('', '_blank')
-    win.document.write(`<!DOCTYPE html><html><head><title>Board Ready Beauty — Study Guide</title>
+    const masteryColor = (m) => m === 'Strong' ? '#2d7a4f' : m === 'Developing' ? '#b07000' : '#c0392b'
+    const sectionsHtml = (guide.sections || []).map(s => `
+      <div class="section">
+        <div class="section-header">
+          <h2>${s.topic}</h2>
+          ${s.mastery ? `<span class="badge" style="background:${masteryColor(s.mastery)}20;color:${masteryColor(s.mastery)};border:1px solid ${masteryColor(s.mastery)}">${s.mastery} · ${s.score || ''}%</span>` : ''}
+        </div>
+        ${s.plainEnglishOverview ? `<p class="overview">${s.plainEnglishOverview}</p>` : ''}
+        ${s.whyItMatters ? `<p class="why"><strong>Why it matters on the exam:</strong> ${s.whyItMatters}</p>` : ''}
+        ${s.keyConcepts?.length ? `
+          <h3>Key Concepts</h3>
+          ${s.keyConcepts.map(c => `
+            <div class="concept">
+              <div class="concept-name">${c.concept}</div>
+              <p>${c.explanation}</p>
+              ${c.analogy ? `<div class="analogy">💡 Think of it this way: ${c.analogy}</div>` : ''}
+              ${c.memoryTrick ? `<div class="memory">🧠 Memory trick: ${c.memoryTrick}</div>` : ''}
+              ${c.examAlert ? `<div class="alert">⚠️ On the exam: ${c.examAlert}</div>` : ''}
+            </div>
+          `).join('')}
+        ` : ''}
+        ${s.examWarnings?.length ? `
+          <div class="warnings">
+            <strong>⚠️ Watch Out On The Exam:</strong>
+            <ul>${s.examWarnings.map(w => `<li>${w}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+        ${s.reference ? `<div class="reference">📚 Reference: ${s.reference}</div>` : ''}
+        ${s.selfCheck?.length ? `
+          <div class="selfcheck">
+            <strong>✏️ Quick Self-Check:</strong>
+            ${s.selfCheck.map((q, i) => `
+              <div class="check-q"><strong>Q${i+1}:</strong> ${q.question}</div>
+              <div class="check-a"><strong>A:</strong> ${q.answer}</div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `).join('')
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Board Ready Beauty — Study Guide</title>
     <style>
-      body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 20px; color: #2d1a1f; line-height: 1.7; }
-      h1 { color: #8B2040; font-size: 2rem; margin-bottom: 4px; }
-      h2 { color: #8B2040; font-size: 1.3rem; margin-top: 32px; border-bottom: 1px solid #ecd5db; padding-bottom: 8px; }
-      h3 { color: #C0506A; font-size: 1.05rem; margin-top: 20px; }
-      .meta { color: #7a5560; font-size: 0.9rem; margin-bottom: 32px; }
-      ul { padding-left: 20px; } li { margin-bottom: 6px; }
-      .tip { background: #FDF6F8; border-left: 3px solid #8B2040; padding: 10px 14px; margin: 12px 0; font-style: italic; color: #5a2030; }
-      @media print { body { margin: 20px; } }
+      * { box-sizing: border-box; }
+      body { font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 32px 24px; color: #2d1a1f; line-height: 1.75; font-size: 15px; }
+      .cover { text-align: center; padding: 48px 0 32px; border-bottom: 2px solid #ecd5db; margin-bottom: 32px; }
+      .cover h1 { color: #8B2040; font-size: 2.2rem; margin: 0 0 6px; }
+      .cover .sub { color: #7a5560; font-size: 1rem; margin-bottom: 4px; }
+      .cover .date { color: #aaa; font-size: 0.85rem; }
+      .score-summary { display: flex; gap: 20px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+      .score-pill { background: #FDF6F8; border: 1px solid #ecd5db; border-radius: 20px; padding: 8px 20px; font-size: 0.9rem; color: #8B2040; font-weight: bold; }
+      .intro-box { background: #FDF6F8; border-left: 4px solid #8B2040; padding: 16px 20px; border-radius: 0 10px 10px 0; margin-bottom: 24px; font-style: italic; color: #5a2030; }
+      .how-to { background: #f0f8f4; border-left: 4px solid #2d7a4f; padding: 14px 18px; border-radius: 0 10px 10px 0; margin-bottom: 32px; font-size: 0.92rem; color: #1a4a30; }
+      .section { margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid #ecd5db; page-break-inside: avoid; }
+      .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+      h2 { color: #8B2040; font-size: 1.35rem; margin: 0; }
+      h3 { color: #C0506A; font-size: 1rem; margin: 20px 0 10px; border-bottom: 1px dotted #ecd5db; padding-bottom: 4px; }
+      .badge { font-size: 0.78rem; padding: 3px 12px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+      .overview { color: #3a2025; font-size: 0.97rem; margin-bottom: 8px; }
+      .why { color: #5a4040; font-size: 0.9rem; margin-bottom: 16px; }
+      .concept { background: #fdf6f8; border: 1px solid #ecd5db; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+      .concept-name { font-weight: 700; color: #8B2040; font-size: 1rem; margin-bottom: 6px; }
+      .analogy { background: #fffbea; border-left: 3px solid #f0c040; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.9rem; color: #5a4800; }
+      .memory { background: #eef4ff; border-left: 3px solid #4a80c0; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.9rem; color: #1a3a6a; }
+      .alert { background: #fff8e6; border-left: 3px solid #e08020; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.9rem; color: #6a3a00; }
+      .warnings { background: #fff0f0; border: 1px solid #f0c0c0; border-radius: 10px; padding: 12px 16px; margin: 12px 0; }
+      .warnings ul { margin: 8px 0 0; padding-left: 18px; } .warnings li { margin-bottom: 4px; font-size: 0.9rem; }
+      .reference { font-size: 0.82rem; color: #7a5560; margin-top: 12px; font-style: italic; }
+      .selfcheck { background: #f0f8f4; border: 1px solid #b0d8c0; border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+      .check-q { font-size: 0.9rem; color: #1a4a30; margin-bottom: 4px; margin-top: 10px; }
+      .check-a { font-size: 0.9rem; color: #2d7a4f; margin-bottom: 4px; padding-left: 12px; }
+      .schedule { background: #f8f4ff; border: 1px solid #c8b8e8; border-radius: 10px; padding: 16px 20px; margin: 24px 0; }
+      .exam-day { background: #FDF6F8; border: 1px solid #ecd5db; border-radius: 10px; padding: 16px 20px; margin: 24px 0; }
+      .exam-day ul { margin: 8px 0 0; padding-left: 18px; } .exam-day li { margin-bottom: 6px; }
+      .final { text-align: center; padding: 32px 20px; color: #7a5560; font-style: italic; border-top: 2px solid #ecd5db; margin-top: 32px; }
+      @media print { .section { page-break-inside: avoid; } body { padding: 16px; } }
     </style></head><body>
-    <h1>Board Ready Beauty</h1>
-    <div class="meta">Comprehensive Study Guide — Texas Cosmetology Written Exam · Generated ${new Date().toLocaleDateString()}</div>
-    ${guide.sections.map(s => `
-      <h2>${s.topic}</h2>
-      <p>${s.overview}</p>
-      <h3>Key Concepts</h3>
-      <ul>${s.keyPoints.map(p => `<li>${p}</li>`).join('')}</ul>
-      ${s.weakAreas ? `<h3>Focus Areas</h3><ul>${s.weakAreas.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
-      <div class="tip">Exam Tip: ${s.examTip}</div>
-    `).join('')}
-    <h2>Final Notes</h2><p>${guide.finalNotes}</p>
+    <div class="cover">
+      <h1>Board Ready Beauty</h1>
+      <div class="sub">Comprehensive Study Guide — Texas Cosmetology Written Exam (PSI/TDLR)</div>
+      <div class="date">Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+      <div class="score-summary">
+        <span class="score-pill">Overall: ${overallPct}%</span>
+        <span class="score-pill">${examCount} Full Exam${examCount !== 1 ? 's' : ''} Completed</span>
+        <span class="score-pill">${totalAnswered} Questions Answered</span>
+      </div>
+    </div>
+    ${guide.intro ? `<div class="intro-box">${guide.intro}</div>` : ''}
+    ${guide.howToUseThisGuide ? `<div class="how-to"><strong>📖 How to use this guide:</strong> ${guide.howToUseThisGuide}</div>` : ''}
+    ${sectionsHtml}
+    ${guide.studySchedule ? `<div class="schedule"><h3 style="color:#6030a0;margin-top:0">📅 Your Study Schedule</h3><p>${guide.studySchedule}</p></div>` : ''}
+    ${guide.examDayTips?.length ? `<div class="exam-day"><h3 style="color:#8B2040;margin-top:0">🎯 Exam Day Tips</h3><ul>${guide.examDayTips.map(t => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+    ${guide.finalNotes ? `<div class="final">${guide.finalNotes}</div>` : ''}
     </body></html>`)
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print(); win.close() }, 500)
+    setTimeout(() => { win.print(); win.close() }, 600)
   }
 
   if (generating) return <GeneratingGuide />
@@ -487,9 +592,9 @@ function StudyGuidePage({ onHome }) {
 
   return (
     <div className="results-wrap">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="sg-header">
         <div className="intro-title" style={{ margin: 0 }}>📖 Study Guide</div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="sg-actions">
           {guide && <button className="btn-secondary" onClick={downloadPDF} style={{ fontSize: '0.85rem', padding: '10px 18px' }}>⬇ Download PDF</button>}
           <button className="btn-primary" onClick={generateGuide} style={{ fontSize: '0.85rem', padding: '10px 20px', borderRadius: '20px' }}>
             {guide ? '🔄 Regenerate' : '✨ Generate My Guide'}
@@ -512,45 +617,98 @@ function StudyGuidePage({ onHome }) {
 
       {guide && (
         <div>
-          <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px', marginBottom: '20px' }}>
-            <p style={{ color: '#7a5560', lineHeight: '1.8', fontStyle: 'italic' }}>{guide.intro}</p>
-          </div>
-          {guide.sections?.map((s, i) => (
-            <div key={i} className="study-guide-card" style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <div className="study-topic-name" style={{ fontSize: '1.1rem' }}>{s.topic}</div>
-                {s.mastery && (
-                  <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '4px 12px', borderRadius: '20px',
-                    background: s.mastery === 'Strong' ? '#e8f5ee' : s.mastery === 'Developing' ? '#fff3e0' : '#ffeaea',
-                    color: s.mastery === 'Strong' ? '#2d7a4f' : s.mastery === 'Developing' ? '#e08020' : '#c0392b' }}>
-                    {s.mastery}
-                  </span>
-                )}
-              </div>
-              <p style={{ color: '#7a5560', fontSize: '0.9rem', lineHeight: '1.7', marginBottom: '12px' }}>{s.overview}</p>
-              {s.keyPoints?.length > 0 && (
-                <>
-                  <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#8B2040', marginBottom: '8px' }}>Key Concepts</div>
-                  <ul className="study-points" style={{ marginBottom: '12px' }}>{s.keyPoints.map((p, j) => <li key={j}>{p}</li>)}</ul>
-                </>
-              )}
-              {s.weakAreas?.length > 0 && (
-                <>
-                  <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#C0506A', marginBottom: '8px' }}>Focus Areas</div>
-                  <ul className="study-points" style={{ marginBottom: '12px' }}>{s.weakAreas.map((p, j) => <li key={j}>{p}</li>)}</ul>
-                </>
-              )}
-              <div className="exam-tip">📌 Exam Tip: {s.examTip}</div>
-            </div>
-          ))}
-          {guide.finalNotes && (
-            <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px', marginBottom: '24px' }}>
-              <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '8px' }}>Final Notes</div>
-              <p style={{ color: '#7a5560', lineHeight: '1.8' }}>{guide.finalNotes}</p>
+          {guide.intro && <div className="sg-intro-box">{guide.intro}</div>}
+          {guide.howToUseThisGuide && (
+            <div className="sg-how-to">
+              <strong>📖 How to use this guide:</strong> {guide.howToUseThisGuide}
             </div>
           )}
-          <div style={{ textAlign: 'center', paddingBottom: '40px' }}>
-            <button className="btn-secondary" onClick={downloadPDF} style={{ marginRight: '12px' }}>⬇ Download PDF</button>
+
+          {guide.sections?.map((s, i) => {
+            const masteryColor = s.mastery === 'Strong' ? '#2d7a4f' : s.mastery === 'Developing' ? '#b07000' : '#c0392b'
+            const masteryBg = s.mastery === 'Strong' ? '#e8f5ee' : s.mastery === 'Developing' ? '#fff8e0' : '#ffeaea'
+            return (
+              <div key={i} className="sg-section">
+                <div className="sg-section-header">
+                  <div className="study-topic-name" style={{ fontSize: '1.15rem' }}>{s.topic}</div>
+                  {s.mastery && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '4px 14px', borderRadius: '20px', background: masteryBg, color: masteryColor, border: `1px solid ${masteryColor}40` }}>
+                      {s.mastery} {s.score ? `· ${s.score}%` : ''}
+                    </span>
+                  )}
+                </div>
+
+                {s.plainEnglishOverview && (
+                  <p style={{ color: '#3a2025', fontSize: '0.95rem', lineHeight: '1.75', marginBottom: '10px' }}>{s.plainEnglishOverview}</p>
+                )}
+                {s.whyItMatters && (
+                  <p style={{ color: '#5a4040', fontSize: '0.88rem', lineHeight: '1.65', marginBottom: '16px', fontStyle: 'italic' }}>
+                    <strong>Why this matters:</strong> {s.whyItMatters}
+                  </p>
+                )}
+
+                {s.keyConcepts?.length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#8B2040', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Key Concepts</div>
+                    {s.keyConcepts.map((c, j) => (
+                      <div key={j} className="sg-concept">
+                        <div style={{ fontWeight: '700', color: '#8B2040', marginBottom: '6px', fontSize: '0.95rem' }}>{c.concept}</div>
+                        <p style={{ color: '#2d1a1f', fontSize: '0.9rem', lineHeight: '1.7', margin: '0 0 8px' }}>{c.explanation}</p>
+                        {c.analogy && <div className="sg-box sg-box-yellow">💡 <strong>Think of it this way:</strong> {c.analogy}</div>}
+                        {c.memoryTrick && <div className="sg-box sg-box-blue">🧠 <strong>Memory trick:</strong> {c.memoryTrick}</div>}
+                        {c.examAlert && <div className="sg-box sg-box-orange">⚠️ <strong>On the exam:</strong> {c.examAlert}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {s.examWarnings?.length > 0 && (
+                  <div className="sg-warnings">
+                    <div style={{ fontWeight: '700', color: '#c0392b', marginBottom: '8px', fontSize: '0.85rem' }}>⚠️ Watch Out On The Exam</div>
+                    <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                      {s.examWarnings.map((w, j) => <li key={j} style={{ fontSize: '0.88rem', color: '#8b0000', marginBottom: '4px', lineHeight: '1.6' }}>{w}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {s.reference && (
+                  <div style={{ fontSize: '0.78rem', color: '#7a5560', fontStyle: 'italic', marginBottom: '12px' }}>
+                    📚 Reference: {s.reference}
+                  </div>
+                )}
+
+                {s.selfCheck?.length > 0 && (
+                  <div className="sg-selfcheck">
+                    <div style={{ fontWeight: '700', color: '#1a4a30', marginBottom: '10px', fontSize: '0.85rem' }}>✏️ Quick Self-Check</div>
+                    {s.selfCheck.map((q, j) => (
+                      <div key={j} style={{ marginBottom: '10px' }}>
+                        <div style={{ fontSize: '0.88rem', color: '#1a4a30', marginBottom: '3px' }}><strong>Q{j+1}:</strong> {q.question}</div>
+                        <div style={{ fontSize: '0.88rem', color: '#2d7a4f', paddingLeft: '12px' }}><strong>A:</strong> {q.answer}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {guide.studySchedule && (
+            <div className="sg-schedule">
+              <div style={{ fontWeight: '700', color: '#6030a0', marginBottom: '8px' }}>📅 Your Study Schedule</div>
+              <p style={{ color: '#3a1860', fontSize: '0.9rem', lineHeight: '1.75', margin: 0 }}>{guide.studySchedule}</p>
+            </div>
+          )}
+          {guide.examDayTips?.length > 0 && (
+            <div className="sg-examday">
+              <div style={{ fontWeight: '700', color: '#8B2040', marginBottom: '10px' }}>🎯 Exam Day Tips</div>
+              <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                {guide.examDayTips.map((t, i) => <li key={i} style={{ fontSize: '0.9rem', color: '#5a2030', marginBottom: '6px', lineHeight: '1.65' }}>{t}</li>)}
+              </ul>
+            </div>
+          )}
+          {guide.finalNotes && <div className="sg-final">{guide.finalNotes}</div>}
+          <div className="sg-footer-actions">
+            <button className="btn-secondary" onClick={downloadPDF}>⬇ Download PDF</button>
             <button className="btn-primary" onClick={generateGuide} style={{ maxWidth: '220px' }}>🔄 Regenerate Guide</button>
           </div>
         </div>
@@ -696,16 +854,16 @@ function Results({ results, mode, topic, onRetake, onHome, onStudyGuide }) {
 }
 
 export default function App() {
-  const [user, setUser] = useState(null)
-  const [screen, setScreen] = useState('login')
+  const [user, setUser] = useState(() => load('brb_user') || null)
+  const [screen, setScreen] = useState(() => load('brb_user') ? 'dashboard' : 'login')
   const [examMode, setExamMode] = useState(null)
   const [examTopic, setExamTopic] = useState(null)
   const [results, setResults] = useState(null)
   const [examQuestions, setExamQuestions] = useState(null)
   const [feedbackOn, setFeedbackOn] = useState(() => load('brb_feedback') ?? false)
 
-  const handleLogin = (u) => { setUser(u); setScreen('dashboard') }
-  const handleLogout = () => { setUser(null); setScreen('login'); setResults(null) }
+  const handleLogin = (u) => { save('brb_user', u); setUser(u); setScreen('dashboard') }
+  const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null) }
   const handleNav = (s) => { setScreen(s); setResults(null) }
 
   const handleStart = (mode, topic = null) => {
