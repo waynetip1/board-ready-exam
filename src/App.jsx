@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS } from './examEngine.js'
+import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
+import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 
-const EXAM_MINUTES = 120
+const EXAM_MINUTES = 90  // PSI Texas Cosmetology: 90 minutes
 const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)) } catch(e) {} }
 const load = (key) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null } catch(e) { return null } }
 const clear = (key) => { try { localStorage.removeItem(key) } catch(e) {} }
@@ -31,6 +32,76 @@ function Header({ user, onLogout, screen, onNav }) {
     </div>
   )
 }
+
+function TermsModal({ onAccept, onDecline }) {
+  const [tab, setTab] = useState('terms')
+  const [scrolled, setScrolled] = useState(false)
+  const [checked, setChecked] = useState(false)
+
+  const handleScroll = (e) => {
+    const el = e.target
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) setScrolled(true)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        
+        {/* Header */}
+        <div style={{ padding: '20px 24px 0', borderBottom: '1px solid #ecd5db' }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', color: '#8B2040', fontWeight: '700', marginBottom: '12px' }}>
+            Before You Begin
+          </div>
+          <div style={{ display: 'flex', gap: '0' }}>
+            {['terms', 'privacy'].map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: '8px 20px', border: 'none', background: 'none', cursor: 'pointer',
+                borderBottom: tab === t ? '2px solid #8B2040' : '2px solid transparent',
+                color: tab === t ? '#8B2040' : '#7a5560', fontWeight: tab === t ? '600' : '400',
+                fontSize: '0.88rem'
+              }}>
+                {t === 'terms' ? 'Terms of Use' : 'Privacy Policy'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontSize: '0.82rem', lineHeight: '1.75', color: '#2d1a1f', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+          {tab === 'terms' ? TERMS_OF_SERVICE : PRIVACY_POLICY}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid #ecd5db', background: '#fdf6f8' }}>
+          {!scrolled && (
+            <div style={{ fontSize: '0.78rem', color: '#7a5560', marginBottom: '10px', textAlign: 'center' }}>
+              ↓ Please scroll to read the full document
+            </div>
+          )}
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', marginBottom: '14px' }}>
+            <input type="checkbox" checked={checked} onChange={e => setChecked(e.target.checked)}
+              style={{ marginTop: '2px', accentColor: '#8B2040', width: '16px', height: '16px', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.83rem', color: '#2d1a1f', lineHeight: '1.5' }}>
+              I have read and agree to the <strong>Terms of Use</strong> and <strong>Privacy Policy</strong>. I understand PassBoard is an exam prep tool and does not guarantee passage of the PSI examination.
+            </span>
+          </label>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={onDecline} className="btn-secondary" style={{ flex: 1, padding: '12px', fontSize: '0.88rem' }}>
+              Decline
+            </button>
+            <button onClick={onAccept} disabled={!checked} className="btn-primary" style={{ flex: 2, padding: '12px', fontSize: '0.88rem', opacity: checked ? 1 : 0.5 }}>
+              I Agree — Continue
+            </button>
+          </div>
+          <div style={{ textAlign: 'center', fontSize: '0.72rem', color: '#aaa', marginTop: '10px' }}>
+            PassBoard Terms v{TERMS_VERSION} · Effective {TERMS_DATE}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('')
@@ -70,7 +141,7 @@ function Login({ onLogin }) {
   )
 }
 
-function Dashboard({ user, onStart, feedbackOn, setFeedbackOn }) {
+function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDifficulty, adaptiveMode, setAdaptiveMode }) {
   const hasSaved = !!load('brb_session')
   const history = load('brb_history') || []
   const lastFull = [...history].reverse().find(h => h.type === 'full')
@@ -98,6 +169,40 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn }) {
             <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: feedbackOn ? '24px' : '2px', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
           </div>
         </div>
+
+        {/* Difficulty selector */}
+        <div style={{ background: 'white', border: '1.5px solid #ecd5db', borderRadius: '14px', padding: '14px 18px', minWidth: '220px' }}>
+          <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#2d1a1f', marginBottom: '8px' }}>Exam Difficulty</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {['easy', 'standard', 'hard'].map(d => (
+              <button key={d} onClick={() => setDifficulty(d)} style={{
+                flex: 1, padding: '6px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                fontSize: '0.78rem', fontWeight: '600', textTransform: 'capitalize',
+                background: difficulty === d ? '#8B2040' : '#f5f0f2',
+                color: difficulty === d ? 'white' : '#7a5560'
+              }}>{d}</button>
+            ))}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#7a5560', marginTop: '6px' }}>
+            {difficulty === 'easy' ? 'Foundational concepts — great for first study session' : difficulty === 'hard' ? 'Nuanced questions — closest to real exam challenge' : 'Balanced mix — recommended for most students'}
+          </div>
+        </div>
+
+        {/* Adaptive mode toggle */}
+        <div onClick={() => setAdaptiveMode(!adaptiveMode)}
+          style={{ background: adaptiveMode ? '#F0F8FF' : 'white', border: `2px solid ${adaptiveMode ? '#4a80c0' : '#ecd5db'}`, borderRadius: '14px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s', minWidth: '200px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: adaptiveMode ? '#1a3a6a' : '#2d1a1f', marginBottom: '2px' }}>
+              {adaptiveMode ? '🧠 Adaptive Mode ON' : 'Adaptive Mode OFF'}
+            </div>
+            <div style={{ fontSize: '0.73rem', color: adaptiveMode ? '#4a80c0' : '#7a5560', lineHeight: 1.4 }}>
+              {adaptiveMode ? 'Wrong answers get reinforced automatically' : 'Standard mode — no reinforcement'}
+            </div>
+          </div>
+          <div style={{ width: '48px', height: '26px', borderRadius: '13px', background: adaptiveMode ? '#4a80c0' : '#d0c0c5', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+            <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: adaptiveMode ? '24px' : '2px', transition: 'left 0.2s' }} />
+          </div>
+        </div>
       </div>
 
       {hasSaved && (
@@ -120,13 +225,22 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn }) {
           <div className="dash-card-desc">20 questions · No timer · Identifies your weak areas</div>
           <div className="dash-card-action">Start Diagnostic →</div>
         </div>
-        <div className="dash-card" onClick={() => onStart('full')}>
-          <div className="dash-card-icon">📝</div>
-          <div className="dash-card-title">Full Practice Exam</div>
-          <div className="dash-card-desc">120 questions · 120 min · New shuffle every time</div>
-          {lastFull && <div style={{ fontSize: '0.78rem', color: '#8B2040', marginTop: '4px' }}>Last score: {lastFull.score}%</div>}
-          <div className="dash-card-action">Start Exam →</div>
-        </div>
+        {(() => {
+          const fullCount = (load('brb_history') || []).filter(h => h.type === 'full').length
+          const remaining = MAX_FULL_EXAMS - fullCount
+          return (
+            <div className="dash-card" onClick={() => remaining > 0 && onStart('full')} style={{ opacity: remaining === 0 ? 0.6 : 1 }}>
+              <div className="dash-card-icon">📝</div>
+              <div className="dash-card-title">Full Practice Exam</div>
+              <div className="dash-card-desc">100 questions · 90 min · PSI exam format</div>
+              {lastFull && <div style={{ fontSize: '0.78rem', color: '#8B2040', marginTop: '4px' }}>Last score: {lastFull.score}%</div>}
+              <div style={{ fontSize: '0.73rem', color: remaining > 3 ? '#7a5560' : '#c0392b', marginTop: '4px', fontWeight: '600' }}>
+                {remaining === 0 ? '✗ No exams remaining' : `${remaining} of ${MAX_FULL_EXAMS} exams remaining`}
+              </div>
+              <div className="dash-card-action">{remaining > 0 ? 'Start Exam →' : 'Limit reached'}</div>
+            </div>
+          )
+        })()}
       </div>
 
       {hasFullExam && (
@@ -258,11 +372,13 @@ function QuestionNav({ total, current, answers, confirmed, onJump }) {
   )
 }
 
-function ExamScreen({ mode, topic, examQuestions, feedbackOn, onSubmit, onHome }) {
+function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSubmit, onHome }) {
   const totalTime = (mode === 'full' || mode === 'resume') ? EXAM_MINUTES * 60 : null
   const saved = mode === 'resume' ? load('brb_session') : null
 
   const examQs = examQuestions || []
+  const [adaptiveQueue, setAdaptiveQueue] = useState([])
+  const [wrongInSession, setWrongInSession] = useState([])
   const [current, setCurrent] = useState(saved?.current || 0)
   const [answers, setAnswers] = useState(saved?.answers || {})
   const [confirmed, setConfirmed] = useState(saved?.confirmed || {}) // tracks correct/incorrect per question
@@ -298,12 +414,29 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, onSubmit, onHome }
     const isCorrect = answers[current] === examQs[current].correct
     setConfirmed(prev => ({ ...prev, [current]: isCorrect }))
     setShowFeedback(true)
+    // Adaptive: track wrong answers for reinforcement
+    if (!isCorrect && adaptiveMode) {
+      setWrongInSession(prev => [...prev, examQs[current]])
+    }
   }
 
   const handleNext = () => {
     setShowFeedback(false)
-    if (current < examQs.length - 1) setCurrent(c => c + 1)
-    else handleSubmit()
+    const nextIdx = current + 1
+    if (nextIdx < examQs.length) {
+      setCurrent(nextIdx)
+    } else if (adaptiveMode && wrongInSession.length > 0 && adaptiveQueue.length === 0) {
+      // Inject reinforcement questions from same topics as wrong answers
+      const reinforcement = getAdaptiveReinforcement(wrongInSession, examQs)
+      if (reinforcement.length > 0) {
+        setAdaptiveQueue(reinforcement)
+        setCurrent(examQs.length)
+      } else {
+        handleSubmit()
+      }
+    } else {
+      handleSubmit()
+    }
   }
 
   const handleJump = (i) => {
@@ -318,7 +451,10 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, onSubmit, onHome }
   const mins = timeLeft !== null ? Math.floor(timeLeft / 60).toString().padStart(2, '0') : null
   const secs = timeLeft !== null ? (timeLeft % 60).toString().padStart(2, '0') : null
   const isWarning = timeLeft !== null && timeLeft < 300
-  const q = examQs[current]
+  // In adaptive mode, serve reinforcement questions after main exam
+  const inAdaptivePhase = adaptiveMode && current >= examQs.length && adaptiveQueue.length > 0
+  const adaptiveIdx = current - examQs.length
+  const q = inAdaptivePhase ? adaptiveQueue[adaptiveIdx] : examQs[current]
   const answered = Object.keys(answers).length
   const letters = ['A', 'B', 'C', 'D']
   const modeLabel = mode === 'pretest' ? 'Pre-Test Diagnostic' : mode === 'topic' ? topic : 'Full Practice Exam'
@@ -347,7 +483,10 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, onSubmit, onHome }
             : <div style={{ fontSize: '0.88rem', color: '#8B2040', fontWeight: '600' }}>No time limit</div>}
         </div>
         <div style={{ textAlign: 'center' }}>
-          <div className="progress-text">{current + 1} / {examQs.length}</div>
+          <div className="progress-text">
+            {inAdaptivePhase ? `Reinforcement ${adaptiveIdx + 1}/${adaptiveQueue.length}` : `${current + 1} / ${examQs.length}`}
+            {inAdaptivePhase && <span style={{fontSize:'0.65rem',marginLeft:'6px',color:'#4a80c0'}}>🧠 Adaptive</span>}
+          </div>
           <div style={{ fontSize: '0.75rem', color: '#7a5560' }}>{answered} answered</div>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -358,7 +497,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, onSubmit, onHome }
       </div>
 
       <div className="progress-bar-wrap">
-        <div className="progress-bar-fill" style={{ width: `${((current + 1) / examQs.length) * 100}%` }} />
+        <div className="progress-bar-fill" style={{ width: inAdaptivePhase ? '100%' : `${((current + 1) / examQs.length) * 100}%`, background: inAdaptivePhase ? '#4a80c0' : undefined }} />
       </div>
 
       {showNav && <QuestionNav total={examQs.length} current={current} answers={answers} confirmed={feedbackOn ? confirmed : null} onJump={handleJump} />}
@@ -371,7 +510,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, onSubmit, onHome }
             <button key={i}
               className={getOptionStyle(i)}
               disabled={isConfirmed && feedbackOn}
-              onClick={() => { if (!isConfirmed || !feedbackOn) setAnswers(prev => ({ ...prev, [current]: i })) }}>
+              onClick={() => { if (!isConfirmed || !feedbackOn) { if (inAdaptivePhase) { setAnswers(prev => ({ ...prev, [`a_${adaptiveIdx}`]: i })) } else { setAnswers(prev => ({ ...prev, [current]: i })) } } }}>
               <span className="option-letter">{letters[i]}</span>{opt}
             </button>
           ))}
@@ -808,7 +947,7 @@ function Results({ results, mode, topic, onRetake, onHome, onStudyGuide }) {
         <div className="result-title">{results.passed ? 'Great job!' : "You're getting there!"}</div>
         <div className="result-sub">
           {mode === 'pretest' ? 'Pre-Test · ' : mode === 'topic' ? `${topic} · ` : 'Full Exam · '}
-          {results.correct} of {results.total} correct {!results.passed && '· Need 75% to pass'}
+          {results.correct} of {results.total} correct {!results.passed && '· Need 70% to pass — PSI standard'}
         </div>
         {results.weakTopics?.length > 0 && (
           <>
@@ -861,8 +1000,36 @@ export default function App() {
   const [results, setResults] = useState(null)
   const [examQuestions, setExamQuestions] = useState(null)
   const [feedbackOn, setFeedbackOn] = useState(() => load('brb_feedback') ?? false)
+  const [difficulty, setDifficulty] = useState(() => load('brb_difficulty') || 'standard')
+  const [adaptiveMode, setAdaptiveMode] = useState(() => load('brb_adaptive') ?? false)
+  const [showTerms, setShowTerms] = useState(false)
+  const [pendingUser, setPendingUser] = useState(null)
 
-  const handleLogin = (u) => { save('brb_user', u); setUser(u); setScreen('dashboard') }
+  const handleLogin = (u) => {
+    const accepted = load('brb_terms_accepted')
+    if (!accepted) {
+      setPendingUser(u)
+      setShowTerms(true)
+    } else {
+      save('brb_user', u)
+      setUser(u)
+      setScreen('dashboard')
+    }
+  }
+
+  const handleTermsAccept = () => {
+    save('brb_terms_accepted', { version: TERMS_VERSION, date: new Date().toISOString() })
+    save('brb_user', pendingUser)
+    setUser(pendingUser)
+    setPendingUser(null)
+    setShowTerms(false)
+    setScreen('dashboard')
+  }
+
+  const handleTermsDecline = () => {
+    setPendingUser(null)
+    setShowTerms(false)
+  }
   const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null) }
   const handleNav = (s) => { setScreen(s); setResults(null) }
 
@@ -877,7 +1044,14 @@ export default function App() {
     } else if (mode === 'topic') {
       setExamQuestions(buildTopicTest(topic))
     } else {
-      setExamQuestions(buildFullExam())
+      // Check exam cap
+      const history = load('brb_history') || []
+      const fullCount = history.filter(h => h.type === 'full').length
+      if (fullCount >= MAX_FULL_EXAMS) {
+        alert(`You've used all ${MAX_FULL_EXAMS} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`)
+        return
+      }
+      setExamQuestions(buildFullExam(difficulty))
     }
     setScreen('exam')
   }
@@ -908,12 +1082,13 @@ export default function App() {
     <>
       <Header user={user} onLogout={handleLogout} screen={screen} onNav={handleNav} />
       {screen === 'login' && <Login onLogin={handleLogin} />}
-      {screen === 'dashboard' && <Dashboard user={user} onStart={handleStart} feedbackOn={feedbackOn} setFeedbackOn={setFeedbackOn} />}
+      {screen === 'dashboard' && <Dashboard user={user} onStart={handleStart} feedbackOn={feedbackOn} setFeedbackOn={setFeedbackOn} difficulty={difficulty} setDifficulty={(d) => { setDifficulty(d); save('brb_difficulty', d) }} adaptiveMode={adaptiveMode} setAdaptiveMode={(v) => { setAdaptiveMode(v); save('brb_adaptive', v) }} />}
       {screen === 'stats' && <StatsPage />}
       {screen === 'studyguide' && <StudyGuidePage onHome={() => setScreen('dashboard')} />}
-      {screen === 'exam' && <ExamScreen mode={examMode} topic={examTopic} examQuestions={examQuestions} feedbackOn={feedbackOn} onSubmit={handleSubmit} onHome={() => setScreen('dashboard')} />}
+      {screen === 'exam' && <ExamScreen mode={examMode} topic={examTopic} examQuestions={examQuestions} feedbackOn={feedbackOn} adaptiveMode={adaptiveMode} onSubmit={handleSubmit} onHome={() => setScreen('dashboard')} />}
       {screen === 'grading' && <Grading />}
       {screen === 'results' && <Results results={results} mode={examMode} topic={examTopic} onRetake={() => handleStart(examMode, examTopic)} onHome={() => setScreen('dashboard')} onStudyGuide={() => setScreen('studyguide')} />}
+      {showTerms && <TermsModal onAccept={handleTermsAccept} onDecline={handleTermsDecline} />}
     </>
   )
 }
