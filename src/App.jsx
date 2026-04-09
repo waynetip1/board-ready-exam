@@ -46,8 +46,6 @@ function TermsModal({ onAccept, onDecline }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        
-        {/* Header */}
         <div style={{ padding: '20px 24px 0', borderBottom: '1px solid #ecd5db' }}>
           <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', color: '#8B2040', fontWeight: '700', marginBottom: '12px' }}>
             Before You Begin
@@ -65,13 +63,9 @@ function TermsModal({ onAccept, onDecline }) {
             ))}
           </div>
         </div>
-
-        {/* Scrollable content */}
         <div onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontSize: '0.82rem', lineHeight: '1.75', color: '#2d1a1f', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
           {tab === 'terms' ? TERMS_OF_SERVICE : PRIVACY_POLICY}
         </div>
-
-        {/* Footer */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid #ecd5db', background: '#fdf6f8' }}>
           {!scrolled && (
             <div style={{ fontSize: '0.78rem', color: '#7a5560', marginBottom: '10px', textAlign: 'center' }}>
@@ -101,7 +95,6 @@ function TermsModal({ onAccept, onDecline }) {
     </div>
   )
 }
-
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('')
@@ -170,7 +163,6 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
           </div>
         </div>
 
-        {/* Difficulty selector */}
         <div style={{ background: 'white', border: '1.5px solid #ecd5db', borderRadius: '14px', padding: '14px 18px', minWidth: '220px' }}>
           <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#2d1a1f', marginBottom: '8px' }}>Exam Difficulty</div>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -188,7 +180,6 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
           </div>
         </div>
 
-        {/* Adaptive mode toggle */}
         <div onClick={() => setAdaptiveMode(!adaptiveMode)}
           style={{ background: adaptiveMode ? '#F0F8FF' : 'white', border: `2px solid ${adaptiveMode ? '#4a80c0' : '#ecd5db'}`, borderRadius: '14px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s', minWidth: '200px' }}>
           <div style={{ flex: 1 }}>
@@ -328,10 +319,7 @@ function QuestionNav({ total, current, answers, confirmed, onJump }) {
           const isConfirmedCorrect = confirmed?.[i] === true
           const isConfirmedWrong = confirmed?.[i] === false
           const isAnswered = answers[i] !== undefined
-          let bg = '#ede8ea'
-          let color = '#999'
-          let border = '2px solid transparent'
-          let shadow = 'none'
+          let bg = '#ede8ea', color = '#999', border = '2px solid transparent', shadow = 'none'
           if (isCurrentQ) { bg = '#8B2040'; color = 'white'; border = '2px solid #8B2040'; shadow = '0 2px 8px rgba(139,32,64,0.4)' }
           else if (isConfirmedCorrect) { bg = '#2d7a4f'; color = 'white'; border = '2px solid #2d7a4f' }
           else if (isConfirmedWrong) { bg = '#c0392b'; color = 'white'; border = '2px solid #c0392b' }
@@ -381,7 +369,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
   const [wrongInSession, setWrongInSession] = useState([])
   const [current, setCurrent] = useState(saved?.current || 0)
   const [answers, setAnswers] = useState(saved?.answers || {})
-  const [confirmed, setConfirmed] = useState(saved?.confirmed || {}) // tracks correct/incorrect per question
+  const [confirmed, setConfirmed] = useState(saved?.confirmed || {})
   const [showFeedback, setShowFeedback] = useState(false)
   const [timeLeft, setTimeLeft] = useState(saved?.timeLeft ?? totalTime)
   const [showNav, setShowNav] = useState(false)
@@ -408,13 +396,11 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
     return () => clearInterval(timer)
   }, [handleSubmit, totalTime])
 
-  // When feedback mode is on, show feedback after confirm
   const handleConfirm = () => {
     if (answers[current] === undefined) return
     const isCorrect = answers[current] === examQs[current].correct
     setConfirmed(prev => ({ ...prev, [current]: isCorrect }))
     setShowFeedback(true)
-    // Adaptive: track wrong answers for reinforcement
     if (!isCorrect && adaptiveMode) {
       setWrongInSession(prev => [...prev, examQs[current]])
     }
@@ -426,7 +412,6 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
     if (nextIdx < examQs.length) {
       setCurrent(nextIdx)
     } else if (adaptiveMode && wrongInSession.length > 0 && adaptiveQueue.length === 0) {
-      // Inject reinforcement questions from same topics as wrong answers
       const reinforcement = getAdaptiveReinforcement(wrongInSession, examQs)
       if (reinforcement.length > 0) {
         setAdaptiveQueue(reinforcement)
@@ -445,13 +430,11 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
     setShowNav(false)
   }
 
-  // When switching questions reset feedback display
   useEffect(() => { setShowFeedback(false) }, [current])
 
   const mins = timeLeft !== null ? Math.floor(timeLeft / 60).toString().padStart(2, '0') : null
   const secs = timeLeft !== null ? (timeLeft % 60).toString().padStart(2, '0') : null
   const isWarning = timeLeft !== null && timeLeft < 300
-  // In adaptive mode, serve reinforcement questions after main exam
   const inAdaptivePhase = adaptiveMode && current >= examQs.length && adaptiveQueue.length > 0
   const adaptiveIdx = current - examQs.length
   const q = inAdaptivePhase ? adaptiveQueue[adaptiveIdx] : examQs[current]
@@ -485,7 +468,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
         <div style={{ textAlign: 'center' }}>
           <div className="progress-text">
             {inAdaptivePhase ? `Reinforcement ${adaptiveIdx + 1}/${adaptiveQueue.length}` : `${current + 1} / ${examQs.length}`}
-            {inAdaptivePhase && <span style={{fontSize:'0.65rem',marginLeft:'6px',color:'#4a80c0'}}>🧠 Adaptive</span>}
+            {inAdaptivePhase && <span style={{ fontSize: '0.65rem', marginLeft: '6px', color: '#4a80c0' }}>🧠 Adaptive</span>}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#7a5560' }}>{answered} answered</div>
         </div>
@@ -516,7 +499,6 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
           ))}
         </div>
 
-        {/* Feedback mode: show Confirm button or feedback overlay */}
         {feedbackOn && !isConfirmed && selectedAnswer !== undefined && (
           <button className="btn-primary" style={{ marginTop: '16px', borderRadius: '10px' }} onClick={handleConfirm}>
             Confirm Answer
@@ -616,8 +598,15 @@ function StudyGuidePage({ onHome }) {
 
   const downloadPDF = () => {
     if (!guide) return
-    const win = window.open('', '_blank')
+
+    const history = load('brb_history') || []
+    const totalAnswered = history.reduce((s, h) => s + (h.total || 0), 0)
+    const totalCorrect = history.reduce((s, h) => s + (h.correct || 0), 0)
+    const overallPct = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0
+    const examCount = history.filter(h => h.type === 'full').length
+
     const masteryColor = (m) => m === 'Strong' ? '#2d7a4f' : m === 'Developing' ? '#b07000' : '#c0392b'
+
     const sectionsHtml = (guide.sections || []).map(s => `
       <div class="section">
         <div class="section-header">
@@ -649,14 +638,15 @@ function StudyGuidePage({ onHome }) {
           <div class="selfcheck">
             <strong>✏️ Quick Self-Check:</strong>
             ${s.selfCheck.map((q, i) => `
-              <div class="check-q"><strong>Q${i+1}:</strong> ${q.question}</div>
+              <div class="check-q"><strong>Q${i + 1}:</strong> ${q.question}</div>
               <div class="check-a"><strong>A:</strong> ${q.answer}</div>
             `).join('')}
           </div>
         ` : ''}
       </div>
     `).join('')
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Board Ready Beauty — Study Guide</title>
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Board Ready Beauty — Study Guide</title>
     <style>
       * { box-sizing: border-box; }
       body { font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 32px 24px; color: #2d1a1f; line-height: 1.75; font-size: 15px; }
@@ -708,10 +698,26 @@ function StudyGuidePage({ onHome }) {
     ${guide.studySchedule ? `<div class="schedule"><h3 style="color:#6030a0;margin-top:0">📅 Your Study Schedule</h3><p>${guide.studySchedule}</p></div>` : ''}
     ${guide.examDayTips?.length ? `<div class="exam-day"><h3 style="color:#8B2040;margin-top:0">🎯 Exam Day Tips</h3><ul>${guide.examDayTips.map(t => `<li>${t}</li>`).join('')}</ul></div>` : ''}
     ${guide.finalNotes ? `<div class="final">${guide.finalNotes}</div>` : ''}
-    </body></html>`)
-    win.document.close()
-    win.focus()
-    setTimeout(() => { win.print(); win.close() }, 600)
+    </body></html>`
+
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank')
+    if (win) {
+      win.addEventListener('load', () => {
+        setTimeout(() => {
+          win.print()
+          URL.revokeObjectURL(url)
+        }, 500)
+      })
+    } else {
+      // Fallback: direct download if popup blocked
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'BRB-Study-Guide.html'
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
   }
 
   if (generating) return <GeneratingGuide />
@@ -776,7 +782,6 @@ function StudyGuidePage({ onHome }) {
                     </span>
                   )}
                 </div>
-
                 {s.plainEnglishOverview && (
                   <p style={{ color: '#3a2025', fontSize: '0.95rem', lineHeight: '1.75', marginBottom: '10px' }}>{s.plainEnglishOverview}</p>
                 )}
@@ -785,7 +790,6 @@ function StudyGuidePage({ onHome }) {
                     <strong>Why this matters:</strong> {s.whyItMatters}
                   </p>
                 )}
-
                 {s.keyConcepts?.length > 0 && (
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#8B2040', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Key Concepts</div>
@@ -800,7 +804,6 @@ function StudyGuidePage({ onHome }) {
                     ))}
                   </div>
                 )}
-
                 {s.examWarnings?.length > 0 && (
                   <div className="sg-warnings">
                     <div style={{ fontWeight: '700', color: '#c0392b', marginBottom: '8px', fontSize: '0.85rem' }}>⚠️ Watch Out On The Exam</div>
@@ -809,19 +812,17 @@ function StudyGuidePage({ onHome }) {
                     </ul>
                   </div>
                 )}
-
                 {s.reference && (
                   <div style={{ fontSize: '0.78rem', color: '#7a5560', fontStyle: 'italic', marginBottom: '12px' }}>
                     📚 Reference: {s.reference}
                   </div>
                 )}
-
                 {s.selfCheck?.length > 0 && (
                   <div className="sg-selfcheck">
                     <div style={{ fontWeight: '700', color: '#1a4a30', marginBottom: '10px', fontSize: '0.85rem' }}>✏️ Quick Self-Check</div>
                     {s.selfCheck.map((q, j) => (
                       <div key={j} style={{ marginBottom: '10px' }}>
-                        <div style={{ fontSize: '0.88rem', color: '#1a4a30', marginBottom: '3px' }}><strong>Q{j+1}:</strong> {q.question}</div>
+                        <div style={{ fontSize: '0.88rem', color: '#1a4a30', marginBottom: '3px' }}><strong>Q{j + 1}:</strong> {q.question}</div>
                         <div style={{ fontSize: '0.88rem', color: '#2d7a4f', paddingLeft: '12px' }}><strong>A:</strong> {q.answer}</div>
                       </div>
                     ))}
@@ -1030,6 +1031,7 @@ export default function App() {
     setPendingUser(null)
     setShowTerms(false)
   }
+
   const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null) }
   const handleNav = (s) => { setScreen(s); setResults(null) }
 
@@ -1044,7 +1046,6 @@ export default function App() {
     } else if (mode === 'topic') {
       setExamQuestions(buildTopicTest(topic))
     } else {
-      // Check exam cap
       const history = load('brb_history') || []
       const fullCount = history.filter(h => h.type === 'full').length
       if (fullCount >= MAX_FULL_EXAMS) {
@@ -1072,7 +1073,6 @@ export default function App() {
         attempts[topic] = (attempts[topic] || 0) + 1
         save('brb_topic_attempts', attempts)
       }
-      // Invalidate cached study guide when new data arrives
       if (mode === 'full') clear('brb_study_guide')
       setResults(data); setScreen('results')
     } catch { alert('Grading failed. Please try again.'); setScreen('dashboard') }
