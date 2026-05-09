@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
+import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, MAX_TOPIC_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 
 const EXAM_MINUTES = 90  // PSI Texas Cosmetology: 90 minutes
@@ -260,14 +260,19 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: '8px' }}>
           {TOPICS.map(topic => {
             const attempts = topicAttempts[topic] || 0
+            const remaining = MAX_TOPIC_EXAMS - attempts
             const topicHistory = (load('brb_history') || []).filter(h => h.topic === topic)
             const lastScore = topicHistory.length > 0 ? topicHistory[topicHistory.length - 1].score : null
             return (
-              <div key={topic} className="topic-card" onClick={() => onStart('topic', topic)}>
+              <div key={topic} className="topic-card"
+                onClick={() => remaining > 0 && onStart('topic', topic)}
+                style={{ opacity: remaining === 0 ? 0.55 : 1, cursor: remaining === 0 ? 'default' : 'pointer' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2d1a1f' }}>{topic}</div>
                 <div style={{ fontSize: '0.73rem', color: '#7a5560', marginTop: '3px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>20Q focused</span>
-                  <span>{attempts > 0 ? `${attempts}x${lastScore !== null ? ` · ${lastScore}%` : ''}` : 'Not taken'}</span>
+                  <span>20Q · 3 attempts</span>
+                  <span style={{ color: remaining === 0 ? '#c0392b' : remaining === 1 ? '#e08020' : '#7a5560' }}>
+                    {remaining === 0 ? '✗ All used' : `${remaining} left${lastScore !== null ? ` · ${lastScore}%` : ''}`}
+                  </span>
                 </div>
               </div>
             )
@@ -1044,7 +1049,13 @@ export default function App() {
     } else if (mode === 'pretest') {
       setExamQuestions(buildPreTest())
     } else if (mode === 'topic') {
-      setExamQuestions(buildTopicTest(topic))
+      const attempts = load('brb_topic_attempts') || {}
+      const attemptIndex = attempts[topic] || 0
+      if (attemptIndex >= MAX_TOPIC_EXAMS) {
+        alert(`You've completed all ${MAX_TOPIC_EXAMS} focused exams for this topic. All 60 questions have been covered.`)
+        return
+      }
+      setExamQuestions(buildTopicTest(topic, attemptIndex))
     } else {
       const history = load('brb_history') || []
       const fullCount = history.filter(h => h.type === 'full').length
