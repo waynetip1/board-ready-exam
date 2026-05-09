@@ -266,7 +266,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
               <div key={topic} className="topic-card" onClick={() => onStart('topic', topic)}>
                 <div style={{ fontSize: '0.85rem', fontWeight: '500', color: '#2d1a1f' }}>{topic}</div>
                 <div style={{ fontSize: '0.73rem', color: '#7a5560', marginTop: '3px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{TOPIC_PROPORTIONS[topic]}Q bank</span>
+                  <span>20Q focused</span>
                   <span>{attempts > 0 ? `${attempts}x${lastScore !== null ? ` · ${lastScore}%` : ''}` : 'Not taken'}</span>
                 </div>
               </div>

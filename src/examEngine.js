@@ -99,7 +99,8 @@ export function buildPreTest() {
   return shuffle(selected)
 }
 
-// Build a topic test: all questions for that topic, shuffled
+// Build a topic test: 20 questions per topic, shuffled from full topic pool
+export const TOPIC_TEST_COUNT = 20
 export function buildTopicTest(topic) {
-  return shuffle(questions.filter(q => q.topic === topic)).map(shuffleChoices)
+  return shuffle(questions.filter(q => q.topic === topic)).slice(0, TOPIC_TEST_COUNT).map(shuffleChoices)
 }
