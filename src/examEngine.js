@@ -99,8 +99,14 @@ export function buildPreTest() {
   return shuffle(selected)
 }
 
-// Build a topic test: 20 questions per topic, shuffled from full topic pool
+// Focused topic test: 3 non-overlapping attempts of 20Q each from 60Q pool
 export const TOPIC_TEST_COUNT = 20
-export function buildTopicTest(topic) {
-  return shuffle(questions.filter(q => q.topic === topic)).slice(0, TOPIC_TEST_COUNT).map(shuffleChoices)
+export const MAX_TOPIC_EXAMS = 3
+
+export function buildTopicTest(topic, attemptIndex = 0) {
+  const topicPool = questions.filter(q => q.topic === topic)
+  const sorted = [...topicPool].sort((a, b) => a.id - b.id)
+  const start = attemptIndex * TOPIC_TEST_COUNT
+  const slice = sorted.slice(start, start + TOPIC_TEST_COUNT)
+  return shuffle(slice).map(shuffleChoices)
 }
