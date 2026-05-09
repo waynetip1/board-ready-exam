@@ -19,7 +19,7 @@ function Header({ user, onLogout, screen, onNav }) {
           {['dashboard', 'stats', 'studyguide'].map(s => (
             <button key={s} onClick={() => onNav(s)} style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: screen === s ? '#8B2040' : '#7a5560',
+              color: screen === s ? '#c8185a' : '#7a5560',
               fontWeight: screen === s ? '600' : '400',
               fontSize: '0.88rem'
             }}>
@@ -47,15 +47,15 @@ function TermsModal({ onAccept, onDecline }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '20px 24px 0', borderBottom: '1px solid #ecd5db' }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', color: '#8B2040', fontWeight: '700', marginBottom: '12px' }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', color: '#c8185a', fontWeight: '700', marginBottom: '12px' }}>
             Before You Begin
           </div>
           <div style={{ display: 'flex', gap: '0' }}>
             {['terms', 'privacy'].map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '8px 20px', border: 'none', background: 'none', cursor: 'pointer',
-                borderBottom: tab === t ? '2px solid #8B2040' : '2px solid transparent',
-                color: tab === t ? '#8B2040' : '#7a5560', fontWeight: tab === t ? '600' : '400',
+                borderBottom: tab === t ? '2px solid #c8185a' : '2px solid transparent',
+                color: tab === t ? '#c8185a' : '#7a5560', fontWeight: tab === t ? '600' : '400',
                 fontSize: '0.88rem'
               }}>
                 {t === 'terms' ? 'Terms of Use' : 'Privacy Policy'}
@@ -74,7 +74,7 @@ function TermsModal({ onAccept, onDecline }) {
           )}
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', marginBottom: '14px' }}>
             <input type="checkbox" checked={checked} onChange={e => setChecked(e.target.checked)}
-              style={{ marginTop: '2px', accentColor: '#8B2040', width: '16px', height: '16px', flexShrink: 0 }} />
+              style={{ marginTop: '2px', accentColor: '#c8185a', width: '16px', height: '16px', flexShrink: 0 }} />
             <span style={{ fontSize: '0.83rem', color: '#2d1a1f', lineHeight: '1.5' }}>
               I have read and agree to the <strong>Terms of Use</strong> and <strong>Privacy Policy</strong>. I understand PassBoard is an exam prep tool and does not guarantee passage of the PSI examination.
             </span>
@@ -127,7 +127,7 @@ function Login({ onLogin }) {
         <button className="btn-primary" onClick={handleSubmit} disabled={loading}>{loading ? 'Signing in...' : 'Access My Exam'}</button>
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.8rem', color: '#7a5560' }}>
           Use the email and password from your purchase confirmation.<br />
-          <a href="https://boardreadybeauty.com/my-account/lost-password/" style={{ color: '#8B2040' }}>Forgot password?</a>
+          <a href="https://boardreadybeauty.com/my-account/lost-password/" style={{ color: '#c8185a' }}>Forgot password?</a>
         </p>
       </div>
     </div>
@@ -149,16 +149,16 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
           <div className="intro-sub">What would you like to study today?</div>
         </div>
         <div onClick={() => { setFeedbackOn(!feedbackOn); save('brb_feedback', !feedbackOn) }}
-          style={{ background: feedbackOn ? '#FDF0F3' : 'white', border: `2px solid ${feedbackOn ? '#8B2040' : '#ecd5db'}`, borderRadius: '14px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s', minWidth: '220px' }}>
+          style={{ background: feedbackOn ? '#FDF0F3' : 'white', border: `2px solid ${feedbackOn ? '#c8185a' : '#ecd5db'}`, borderRadius: '14px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s', minWidth: '220px' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: feedbackOn ? '#8B2040' : '#2d1a1f', marginBottom: '2px' }}>
+            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: feedbackOn ? '#c8185a' : '#2d1a1f', marginBottom: '2px' }}>
               {feedbackOn ? '✓ Real-Time Feedback ON' : 'Real-Time Feedback OFF'}
             </div>
             <div style={{ fontSize: '0.73rem', color: feedbackOn ? '#C0506A' : '#7a5560', lineHeight: 1.4 }}>
               {feedbackOn ? 'See correct/wrong after each answer' : 'Classic mode — review at end'}
             </div>
           </div>
-          <div style={{ width: '48px', height: '26px', borderRadius: '13px', background: feedbackOn ? '#8B2040' : '#d0c0c5', position: 'relative', transition: 'background 0.2s', flexShrink: 0, boxShadow: feedbackOn ? '0 2px 8px rgba(139,32,64,0.3)' : 'none' }}>
+          <div style={{ width: '48px', height: '26px', borderRadius: '13px', background: feedbackOn ? '#c8185a' : '#d0c0c5', position: 'relative', transition: 'background 0.2s', flexShrink: 0, boxShadow: feedbackOn ? '0 2px 8px rgba(139,32,64,0.3)' : 'none' }}>
             <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: feedbackOn ? '24px' : '2px', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
           </div>
         </div>
@@ -170,7 +170,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
               <button key={d} onClick={() => setDifficulty(d)} style={{
                 flex: 1, padding: '6px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer',
                 fontSize: '0.78rem', fontWeight: '600', textTransform: 'capitalize',
-                background: difficulty === d ? '#8B2040' : '#f5f0f2',
+                background: difficulty === d ? '#c8185a' : '#f5f0f2',
                 color: difficulty === d ? 'white' : '#7a5560'
               }}>{d}</button>
             ))}
@@ -224,7 +224,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
               <div className="dash-card-icon">📝</div>
               <div className="dash-card-title">Full Practice Exam</div>
               <div className="dash-card-desc">100 questions · 90 min · PSI exam format</div>
-              {lastFull && <div style={{ fontSize: '0.78rem', color: '#8B2040', marginTop: '4px' }}>Last score: {lastFull.score}%</div>}
+              {lastFull && <div style={{ fontSize: '0.78rem', color: '#c8185a', marginTop: '4px' }}>Last score: {lastFull.score}%</div>}
               <div style={{ fontSize: '0.73rem', color: remaining > 3 ? '#7a5560' : '#c0392b', marginTop: '4px', fontWeight: '600' }}>
                 {remaining === 0 ? '✗ No exams remaining' : `${remaining} of ${MAX_FULL_EXAMS} exams remaining`}
               </div>
@@ -235,7 +235,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
       </div>
 
       {hasFullExam && (
-        <div style={{ background: 'linear-gradient(135deg, #8B2040, #C0506A)', borderRadius: '12px', padding: '20px 24px', marginBottom: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        <div style={{ background: 'linear-gradient(135deg, #c8185a, #C0506A)', borderRadius: '12px', padding: '20px 24px', marginBottom: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           onClick={() => onStart('studyguide')}>
           <div>
             <div style={{ color: 'white', fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', fontWeight: '700', marginBottom: '4px' }}>📖 Comprehensive Study Guide</div>
@@ -256,7 +256,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
       )}
 
       <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px' }}>
-        <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '14px', fontSize: '0.95rem' }}>Focused Topic Tests</div>
+        <div style={{ fontWeight: '600', color: '#c8185a', marginBottom: '14px', fontSize: '0.95rem' }}>Focused Topic Tests</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: '8px' }}>
           {TOPICS.map(topic => {
             const attempts = topicAttempts[topic] || 0
@@ -312,7 +312,7 @@ function QuestionNav({ total, current, answers, confirmed, onJump }) {
   const hasFeedback = confirmed && Object.keys(confirmed).length > 0
   return (
     <div style={{ background: 'white', border: '1.5px solid #ecd5db', borderRadius: '14px', padding: '18px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(139,32,64,0.06)' }}>
-      <div style={{ fontSize: '0.8rem', color: '#8B2040', marginBottom: '14px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Question Map</div>
+      <div style={{ fontSize: '0.8rem', color: '#c8185a', marginBottom: '14px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Question Map</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
         {Array.from({ length: total }, (_, i) => {
           const isCurrentQ = i === current
@@ -320,10 +320,10 @@ function QuestionNav({ total, current, answers, confirmed, onJump }) {
           const isConfirmedWrong = confirmed?.[i] === false
           const isAnswered = answers[i] !== undefined
           let bg = '#ede8ea', color = '#999', border = '2px solid transparent', shadow = 'none'
-          if (isCurrentQ) { bg = '#8B2040'; color = 'white'; border = '2px solid #8B2040'; shadow = '0 2px 8px rgba(139,32,64,0.4)' }
+          if (isCurrentQ) { bg = '#c8185a'; color = 'white'; border = '2px solid #c8185a'; shadow = '0 2px 8px rgba(139,32,64,0.4)' }
           else if (isConfirmedCorrect) { bg = '#2d7a4f'; color = 'white'; border = '2px solid #2d7a4f' }
           else if (isConfirmedWrong) { bg = '#c0392b'; color = 'white'; border = '2px solid #c0392b' }
-          else if (isAnswered) { bg = '#F9D8E6'; color = '#8B2040'; border = '2px solid #E8809A' }
+          else if (isAnswered) { bg = '#F9D8E6'; color = '#c8185a'; border = '2px solid #E8809A' }
           return (
             <button key={i} onClick={() => onJump(i)} title={`Question ${i + 1}${isConfirmedCorrect ? ' ✓ Correct' : isConfirmedWrong ? ' ✗ Wrong' : isAnswered ? ' — Answered' : ' — Unanswered'}`} style={{
               width: '34px', height: '34px', borderRadius: '8px', border, cursor: 'pointer',
@@ -339,7 +339,7 @@ function QuestionNav({ total, current, answers, confirmed, onJump }) {
       </div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', padding: '10px 12px', background: '#fdf6f8', borderRadius: '8px' }}>
         <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#8B2040', display: 'inline-block' }}></span>Current
+          <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#c8185a', display: 'inline-block' }}></span>Current
         </span>
         {hasFeedback && <>
           <span style={{ fontSize: '0.73rem', color: '#555', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -463,7 +463,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
           <div style={{ fontSize: '0.73rem', color: '#7a5560', marginBottom: '2px' }}>{modeLabel}</div>
           {timeLeft !== null
             ? <div className={`timer ${isWarning ? 'warning' : ''}`}>{mins}:{secs}</div>
-            : <div style={{ fontSize: '0.88rem', color: '#8B2040', fontWeight: '600' }}>No time limit</div>}
+            : <div style={{ fontSize: '0.88rem', color: '#c8185a', fontWeight: '600' }}>No time limit</div>}
         </div>
         <div style={{ textAlign: 'center' }}>
           <div className="progress-text">
@@ -473,7 +473,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
           <div style={{ fontSize: '0.75rem', color: '#7a5560' }}>{answered} answered</div>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {feedbackOn && <span style={{ fontSize: '0.7rem', background: '#F9D8E6', color: '#8B2040', padding: '3px 8px', borderRadius: '10px', fontWeight: '600' }}>Feedback ON</span>}
+          {feedbackOn && <span style={{ fontSize: '0.7rem', background: '#F9D8E6', color: '#c8185a', padding: '3px 8px', borderRadius: '10px', fontWeight: '600' }}>Feedback ON</span>}
           <button className="btn-secondary" style={{ padding: '8px 12px', fontSize: '0.8rem' }} onClick={() => setShowNav(v => !v)}>Map</button>
           <button className="btn-next" onClick={handleSubmit} style={{ padding: '8px 14px', fontSize: '0.8rem' }}>Submit</button>
         </div>
@@ -651,22 +651,22 @@ function StudyGuidePage({ onHome }) {
       * { box-sizing: border-box; }
       body { font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 32px 24px; color: #2d1a1f; line-height: 1.75; font-size: 15px; }
       .cover { text-align: center; padding: 48px 0 32px; border-bottom: 2px solid #ecd5db; margin-bottom: 32px; }
-      .cover h1 { color: #8B2040; font-size: 2.2rem; margin: 0 0 6px; }
+      .cover h1 { color: #c8185a; font-size: 2.2rem; margin: 0 0 6px; }
       .cover .sub { color: #7a5560; font-size: 1rem; margin-bottom: 4px; }
       .cover .date { color: #aaa; font-size: 0.85rem; }
       .score-summary { display: flex; gap: 20px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
-      .score-pill { background: #FDF6F8; border: 1px solid #ecd5db; border-radius: 20px; padding: 8px 20px; font-size: 0.9rem; color: #8B2040; font-weight: bold; }
-      .intro-box { background: #FDF6F8; border-left: 4px solid #8B2040; padding: 16px 20px; border-radius: 0 10px 10px 0; margin-bottom: 24px; font-style: italic; color: #5a2030; }
+      .score-pill { background: #FDF6F8; border: 1px solid #ecd5db; border-radius: 20px; padding: 8px 20px; font-size: 0.9rem; color: #c8185a; font-weight: bold; }
+      .intro-box { background: #FDF6F8; border-left: 4px solid #c8185a; padding: 16px 20px; border-radius: 0 10px 10px 0; margin-bottom: 24px; font-style: italic; color: #5a2030; }
       .how-to { background: #f0f8f4; border-left: 4px solid #2d7a4f; padding: 14px 18px; border-radius: 0 10px 10px 0; margin-bottom: 32px; font-size: 0.92rem; color: #1a4a30; }
       .section { margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid #ecd5db; page-break-inside: avoid; }
       .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-      h2 { color: #8B2040; font-size: 1.35rem; margin: 0; }
+      h2 { color: #c8185a; font-size: 1.35rem; margin: 0; }
       h3 { color: #C0506A; font-size: 1rem; margin: 20px 0 10px; border-bottom: 1px dotted #ecd5db; padding-bottom: 4px; }
       .badge { font-size: 0.78rem; padding: 3px 12px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
       .overview { color: #3a2025; font-size: 0.97rem; margin-bottom: 8px; }
       .why { color: #5a4040; font-size: 0.9rem; margin-bottom: 16px; }
       .concept { background: #fdf6f8; border: 1px solid #ecd5db; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
-      .concept-name { font-weight: 700; color: #8B2040; font-size: 1rem; margin-bottom: 6px; }
+      .concept-name { font-weight: 700; color: #c8185a; font-size: 1rem; margin-bottom: 6px; }
       .analogy { background: #fffbea; border-left: 3px solid #f0c040; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.9rem; color: #5a4800; }
       .memory { background: #eef4ff; border-left: 3px solid #4a80c0; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.9rem; color: #1a3a6a; }
       .alert { background: #fff8e6; border-left: 3px solid #e08020; padding: 8px 12px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.9rem; color: #6a3a00; }
@@ -696,7 +696,7 @@ function StudyGuidePage({ onHome }) {
     ${guide.howToUseThisGuide ? `<div class="how-to"><strong>📖 How to use this guide:</strong> ${guide.howToUseThisGuide}</div>` : ''}
     ${sectionsHtml}
     ${guide.studySchedule ? `<div class="schedule"><h3 style="color:#6030a0;margin-top:0">📅 Your Study Schedule</h3><p>${guide.studySchedule}</p></div>` : ''}
-    ${guide.examDayTips?.length ? `<div class="exam-day"><h3 style="color:#8B2040;margin-top:0">🎯 Exam Day Tips</h3><ul>${guide.examDayTips.map(t => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+    ${guide.examDayTips?.length ? `<div class="exam-day"><h3 style="color:#c8185a;margin-top:0">🎯 Exam Day Tips</h3><ul>${guide.examDayTips.map(t => `<li>${t}</li>`).join('')}</ul></div>` : ''}
     ${guide.finalNotes ? `<div class="final">${guide.finalNotes}</div>` : ''}
     </body></html>`
 
@@ -752,7 +752,7 @@ function StudyGuidePage({ onHome }) {
       {!guide && !error && (
         <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '16px', padding: '40px', textAlign: 'center' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>✨</div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: '#8B2040', marginBottom: '8px' }}>Ready to generate your guide</div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: '#c8185a', marginBottom: '8px' }}>Ready to generate your guide</div>
           <div style={{ color: '#7a5560', marginBottom: '24px', lineHeight: '1.7' }}>
             Claude AI will analyze your exam history across all topics and create a comprehensive, personalized study guide highlighting your weak areas and reinforcing your strengths.
           </div>
@@ -792,10 +792,10 @@ function StudyGuidePage({ onHome }) {
                 )}
                 {s.keyConcepts?.length > 0 && (
                   <div style={{ marginBottom: '16px' }}>
-                    <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#8B2040', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Key Concepts</div>
+                    <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#c8185a', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Key Concepts</div>
                     {s.keyConcepts.map((c, j) => (
                       <div key={j} className="sg-concept">
-                        <div style={{ fontWeight: '700', color: '#8B2040', marginBottom: '6px', fontSize: '0.95rem' }}>{c.concept}</div>
+                        <div style={{ fontWeight: '700', color: '#c8185a', marginBottom: '6px', fontSize: '0.95rem' }}>{c.concept}</div>
                         <p style={{ color: '#2d1a1f', fontSize: '0.9rem', lineHeight: '1.7', margin: '0 0 8px' }}>{c.explanation}</p>
                         {c.analogy && <div className="sg-box sg-box-yellow">💡 <strong>Think of it this way:</strong> {c.analogy}</div>}
                         {c.memoryTrick && <div className="sg-box sg-box-blue">🧠 <strong>Memory trick:</strong> {c.memoryTrick}</div>}
@@ -840,7 +840,7 @@ function StudyGuidePage({ onHome }) {
           )}
           {guide.examDayTips?.length > 0 && (
             <div className="sg-examday">
-              <div style={{ fontWeight: '700', color: '#8B2040', marginBottom: '10px' }}>🎯 Exam Day Tips</div>
+              <div style={{ fontWeight: '700', color: '#c8185a', marginBottom: '10px' }}>🎯 Exam Day Tips</div>
               <ul style={{ margin: 0, paddingLeft: '18px' }}>
                 {guide.examDayTips.map((t, i) => <li key={i} style={{ fontSize: '0.9rem', color: '#5a2030', marginBottom: '6px', lineHeight: '1.65' }}>{t}</li>)}
               </ul>
@@ -886,11 +886,11 @@ function StatsPage() {
       </div>
       {recentFull.length > 0 && (
         <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px', marginBottom: '16px' }}>
-          <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '16px' }}>Full Exam Score Trend</div>
+          <div style={{ fontWeight: '600', color: '#c8185a', marginBottom: '16px' }}>Full Exam Score Trend</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '80px' }}>
             {recentFull.map((h, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                <div style={{ fontSize: '0.7rem', color: h.passed ? '#2d7a4f' : '#8B2040', fontWeight: '600' }}>{h.score}%</div>
+                <div style={{ fontSize: '0.7rem', color: h.passed ? '#2d7a4f' : '#c8185a', fontWeight: '600' }}>{h.score}%</div>
                 <div style={{ width: '100%', background: h.passed ? '#2d7a4f' : '#C0506A', borderRadius: '4px 4px 0 0', height: `${h.score * 0.7}px`, minHeight: '4px' }} />
                 <div style={{ fontSize: '0.65rem', color: '#7a5560' }}>#{i + 1}</div>
               </div>
@@ -899,7 +899,7 @@ function StatsPage() {
         </div>
       )}
       <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px', marginBottom: '16px' }}>
-        <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '16px' }}>Topic Performance</div>
+        <div style={{ fontWeight: '600', color: '#c8185a', marginBottom: '16px' }}>Topic Performance</div>
         {TOPICS.map(topic => {
           const data = topicStats[topic]
           const pct = data && data.total > 0 ? Math.round((data.correct / data.total) * 100) : null
@@ -919,11 +919,11 @@ function StatsPage() {
       </div>
       {history.length > 0 && (
         <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px' }}>
-          <div style={{ fontWeight: '600', color: '#8B2040', marginBottom: '14px' }}>Recent History</div>
+          <div style={{ fontWeight: '600', color: '#c8185a', marginBottom: '14px' }}>Recent History</div>
           {[...history].reverse().slice(0, 10).map((h, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < 9 ? '1px solid #f0e0e5' : 'none', fontSize: '0.85rem' }}>
               <span style={{ color: '#7a5560' }}>{h.type === 'full' ? '📝 Full Exam' : h.type === 'pretest' ? '🎯 Pre-Test' : `📚 ${h.topic}`}</span>
-              <span style={{ fontWeight: '600', color: h.passed ? '#2d7a4f' : '#8B2040' }}>{h.score}% {h.passed ? '✓' : ''}</span>
+              <span style={{ fontWeight: '600', color: h.passed ? '#2d7a4f' : '#c8185a' }}>{h.score}% {h.passed ? '✓' : ''}</span>
             </div>
           ))}
         </div>

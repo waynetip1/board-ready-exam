@@ -1,7 +1,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --rose: #8B2040;
+  --rose: #c8185a;
   --rose-light: #C0506A;
   --rose-pale: #F9D8E6;
   --rose-bg: #FDF6F8;
@@ -14,7 +14,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: var(--rose-bg);
   color: var(--text);
   min-height: 100vh;
@@ -91,7 +91,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   margin-bottom: 16px;
   outline: none;
   transition: border 0.2s;
@@ -266,7 +266,7 @@ body {
   background: var(--white);
   text-align: left;
   font-size: 0.95rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: all 0.15s;
   display: flex;
@@ -305,7 +305,7 @@ body {
   border-radius: 30px;
   background: transparent;
   color: var(--rose);
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -321,7 +321,7 @@ body {
   border: none;
   border-radius: 30px;
   font-size: 0.95rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: background 0.2s;
 }
