@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   })
 
   const score = Math.round((correct / questions.length) * 100)
-  const passed = score >= 75
+  const passed = score >= 70
   const topicCounts = {}
   wrongAnswers.forEach(q => { topicCounts[q.topic] = (topicCounts[q.topic] || 0) + 1 })
   const weakTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([t]) => t)
