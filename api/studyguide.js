@@ -1,12 +1,31 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  const { topicStats, overallPct, examCount, totalAnswered } = req.body
+  const { topicStats, overallPct, examCount, totalAnswered, tone = 'standard', language = 'en', notes = {} } = req.body
 
   const topicSummary = Object.entries(topicStats || {}).map(([topic, data]) => {
     const pct = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0
     const mastery = pct >= 80 ? 'Strong' : pct >= 60 ? 'Developing' : 'Needs Work'
     return `${topic}: ${pct}% (${data.correct}/${data.total} correct) — ${mastery}`
   }).join('\n')
+
+  const toneInstructions = {
+    standard: "",
+    encouraging: " Use warm, supportive language throughout the guide. Acknowledge the student's effort and celebrate their progress. End each section with a brief encouraging note.",
+    humorous: " Use light humor and memorable analogies throughout the guide to make concepts stick. Keep it appropriate and genuinely helpful.",
+    exam: " Be highly concise. Keep explanations brief and fact-focused. Minimize elaboration."
+  }
+
+  const toneText = toneInstructions[tone] || ""
+  const languageText = language === 'es'
+    ? " Respond entirely in Spanish. Use formal, professional Spanish appropriate for cosmetology exam preparation. Use the same terminology as the Texas PSI cosmetology exam in Spanish. All section headers, explanations, tips, and content must be in Spanish."
+    : ""
+
+  // Build notes section summary if any notes exist
+  const noteEntries = Object.values(notes || {})
+  const notesContext = noteEntries.length > 0
+    ? `\n\nSTUDENT PERSONAL NOTES (${noteEntries.length} total):\n` +
+      noteEntries.slice(0, 20).map(n => `- Topic: ${n.topic || 'General'} | Note: "${n.text}"`).join('\n')
+    : ''
 
   try {
     const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -19,7 +38,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 16000,
-        system: 'You are a JSON API. You must respond with valid JSON only. No explanations, no markdown, no preamble, no commentary. Your entire response must be a single valid JSON object that can be parsed with JSON.parse(). Do not include ```json or ``` markers. Start your response with { and end with }.',
+        system: `You are a JSON API. You must respond with valid JSON only. No explanations, no markdown, no preamble, no commentary. Your entire response must be a single valid JSON object that can be parsed with JSON.parse(). Do not include \`\`\`json or \`\`\` markers. Start your response with { and end with }.${toneText}${languageText}`,
         messages: [{
           role: 'user',
           content: `You are creating a world-class study guide for a student preparing for the Texas PSI TDLR cosmetology written exam.
@@ -29,7 +48,7 @@ STUDENT DATA:
 - Full exams completed: ${examCount}
 - Total questions answered: ${totalAnswered}
 - Topic breakdown:
-${topicSummary}
+${topicSummary}${notesContext}
 
 GUIDE PHILOSOPHY:
 This guide must be genuinely excellent — not a generic list of facts. Follow these principles:

@@ -722,3 +722,56 @@ body {
   .results-wrap { padding: 0; }
   body { background: white !important; }
 }
+
+/* ── EXAM DATE COUNTDOWN ────────────────────────────────────────────────── */
+.countdown-widget {
+  background: white;
+  border: 1.5px solid #ecd5db;
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: all 0.2s;
+}
+
+/* ── STUDY TIMER WIDGET ─────────────────────────────────────────────────── */
+.timer-widget {
+  background: white;
+  border: 1.5px solid #ecd5db;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+@keyframes pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Responsive stacking for countdown/timer row on mobile */
+@media (max-width: 600px) {
+  .countdown-widget,
+  .timer-widget {
+    padding: 12px 14px;
+  }
+  div[style*="grid-template-columns: 1fr 1fr"]:has(.countdown-widget) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── NOTES SECTION ──────────────────────────────────────────────────────── */
+.note-panel-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1.5px solid #ecd5db;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+
+.note-panel-textarea:focus {
+  border-color: #C0506A;
+}

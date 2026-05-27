@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  const { answers, questions } = req.body
+  const { answers, questions, tone = 'standard', language = 'en' } = req.body
   if (!questions || !Array.isArray(questions)) return res.status(400).json({ error: 'Invalid request' })
 
   let correct = 0
@@ -49,6 +49,20 @@ export default async function handler(req, res) {
     return res.status(200).json({ ...fallback, explanations: [], studyGuide: { intro: 'Perfect score! Outstanding work.', topics: [] } })
   }
 
+  const toneInstructions = {
+    standard: "Provide clear, professional explanations.",
+    encouraging: "Use warm, supportive language. Acknowledge effort. End explanations with brief encouragement.",
+    humorous: "Use light humor and memorable analogies to explain concepts. Keep it appropriate and helpful.",
+    exam: "Be ultra-concise. One sentence max per explanation. Facts only, no elaboration."
+  }
+
+  const toneText = toneInstructions[tone] || toneInstructions.standard
+  const languageText = language === 'es'
+    ? " Respond entirely in Spanish. Use formal, professional Spanish appropriate for cosmetology exam preparation. Use the same terminology as the Texas PSI cosmetology exam in Spanish."
+    : ""
+
+  const systemPrompt = `You are a Texas cosmetology PSI exam coach. ${toneText}${languageText}`
+
   const wrongSummary = wrongAnswers.slice(0, 20).map(q =>
     `Q: ${q.question}\nStudent answered: ${q.userAnswer}\nCorrect answer: ${q.correctAnswer}`
   ).join('\n\n')
@@ -60,9 +74,10 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
+        system: systemPrompt,
         messages: [{
           role: 'user',
-          content: `You are a Texas cosmetology PSI exam coach. Student scored ${score}% (${correct}/${questions.length}).
+          content: `Student scored ${score}% (${correct}/${questions.length}).
 
 Wrong answers:
 ${wrongSummary}
