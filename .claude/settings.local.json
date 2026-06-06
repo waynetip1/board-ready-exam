@@ -3,7 +3,11 @@
     "allow": [
       "Bash(python3 *)",
       "Bash(node *)",
-      "Bash(py *)"
+      "Bash(py *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Skill(update-config)"
     ]
   }
 }

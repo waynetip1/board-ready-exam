@@ -1,21 +1,21 @@
 import { questions } from './questions.js'
 
-// Topic proportions for 120-question full exam (must sum to 120)
-// PSI Texas Cosmetology Operator Written Exam: 100 questions, 70% to pass
-// Topic weights based on PSI Candidate Information Bulletin
+// Topic proportions for full exam — aligned to official PSI Texas Cosmetology Operator Written Exam
+// PSI distribution: Licensing & Regulation 20% | Infection Control 28% | Hair & Scalp Care 40% | Nail Care 6% | Skin Care 6%
+// Internal topics are mapped to PSI categories via psi_topic field on each question
 export const TOPIC_PROPORTIONS = {
-  "Sanitation & Infection Control": 15,
-  "Hair Care & Chemistry": 15,
-  "Scalp & Hair Disorders": 8,
-  "Skin Care & Anatomy": 10,
-  "Nail Care": 8,
-  "Chemical Services": 10,
-  "Texas TDLR Laws & Regulations": 10,
-  "Coloring & Lightening": 8,
-  "Haircutting & Styling": 8,
-  "Anatomy & Physiology": 8,
+  "Texas TDLR Laws & Regulations": 20,   // PSI: Licensing & Regulation (20%)
+  "Sanitation & Infection Control": 28,   // PSI: Infection Control (28%)
+  "Hair Care & Chemistry": 7,             // PSI: Hair & Scalp Care (40% split across 6 topics)
+  "Scalp & Hair Disorders": 7,
+  "Chemical Services": 7,
+  "Coloring & Lightening": 7,
+  "Haircutting & Styling": 6,
+  "Anatomy & Physiology": 6,
+  "Nail Care": 6,                         // PSI: Nail Care (6%)
+  "Skin Care & Anatomy": 6,              // PSI: Skin Care (6%)
 }
-// Verify: 15+15+8+10+8+10+10+8+8+8 = 100 ✓
+// Verify: 20+28+7+7+7+7+6+6+6+6 = 100 ✓
 
 export const TOPICS = Object.keys(TOPIC_PROPORTIONS)
 
