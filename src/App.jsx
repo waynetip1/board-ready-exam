@@ -76,6 +76,7 @@ function Header({ user, onLogout, screen, onNav, lang }) {
       <div style={{ cursor: 'pointer' }} onClick={() => onNav('dashboard')}>
         <div className="header-logo">Board Ready Beauty</div>
         <div className="header-sub">Written Exam Prep</div>
+        <div style={{ fontSize: '0.65rem', color: '#1e1a20', opacity: 0.35 }}>v{APP_VERSION}</div>
       </div>
       {user && (
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
