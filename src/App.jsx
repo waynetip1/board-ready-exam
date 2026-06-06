@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, MAX_TOPIC_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 import { t } from './translations.js'
-import { version } from '../package.json'
+const APP_VERSION = '1.1.0'
 
 const EXAM_MINUTES = 90
 const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)) } catch(e) {} }
@@ -195,7 +195,7 @@ function Login({ onLogin }) {
           <a href="https://boardreadybeauty.com/my-account/lost-password/" style={{ color: '#c8185a' }}>Forgot password?</a>
         </p>
       </div>
-      <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.72rem', color: '#1e1a20', opacity: 0.35 }}>v{version}</div>
+      <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.72rem', color: '#1e1a20', opacity: 0.35 }}>v{APP_VERSION}</div>
     </div>
   )
 }
