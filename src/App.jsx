@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, MAX_TOPIC_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 import { t } from './translations.js'
+import { version } from '../package.json'
 
 const EXAM_MINUTES = 90
 const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)) } catch(e) {} }
@@ -151,6 +152,7 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const handleSubmit = async () => {
     if (!email || !password) return setError('Please enter your email and password.')
     setLoading(true); setError('')
@@ -171,13 +173,29 @@ function Login({ onLogin }) {
         <label className="form-label">Email address</label>
         <input className="form-input" type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
         <label className="form-label">Password</label>
-        <input className="form-input" type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+        <div style={{ position: 'relative' }}>
+          <input className="form-input" type={showPassword ? 'text' : 'password'} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ paddingRight: '44px' }} />
+          <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#7a5560', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+            {showPassword ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            )}
+          </button>
+        </div>
         <button className="btn-primary" onClick={handleSubmit} disabled={loading}>{loading ? 'Signing in...' : 'Access My Exam'}</button>
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.8rem', color: '#7a5560' }}>
           Use the email and password from your purchase confirmation.<br />
           <a href="https://boardreadybeauty.com/my-account/lost-password/" style={{ color: '#c8185a' }}>Forgot password?</a>
         </p>
       </div>
+      <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.72rem', color: '#1e1a20', opacity: 0.35 }}>v{version}</div>
     </div>
   )
 }
@@ -1300,12 +1318,12 @@ export default function App() {
   const lang = language
 
   const handleLogin = (u) => {
-    const accepted = load('brb_terms_accepted')
+    const accepted = localStorage.getItem('brb_agreed_to_terms') === 'true'
     if (!accepted) { setPendingUser(u); setShowTerms(true) }
     else { save('brb_user', u); setUser(u); setScreen('dashboard') }
   }
   const handleTermsAccept = () => {
-    save('brb_terms_accepted', { version: TERMS_VERSION, date: new Date().toISOString() })
+    localStorage.setItem('brb_agreed_to_terms', 'true')
     save('brb_user', pendingUser); setUser(pendingUser); setPendingUser(null); setShowTerms(false); setScreen('dashboard')
   }
   const handleTermsDecline = () => { setPendingUser(null); setShowTerms(false) }
