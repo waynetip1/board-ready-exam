@@ -1351,6 +1351,7 @@ export default function App() {
 
   const lang = language
   const engine = licenseEngine ?? getExamEngine('cosmetology')
+  console.log('engine resolved:', engine?.theme?.primary, 'licenseEngine null?', licenseEngine === null)
 
   const handleLogin = (u) => {
     const accepted = localStorage.getItem('brb_agreed_to_terms') === 'true'
@@ -1365,6 +1366,7 @@ export default function App() {
   const handleTermsDecline = () => { setPendingUser(null); setShowTerms(false) }
   const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null); setLicenseEngine(null); resetTheme() }
   const handleSelectLicense = (licenseType) => {
+    console.log('handleSelectLicense called with:', licenseType)
     const engine = getExamEngine(licenseType)
     // Drop any in-progress session from a previously selected license so
     // "Resume" can't hand the admin a stale cross-license question set.
