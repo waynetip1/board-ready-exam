@@ -6,6 +6,9 @@ import {
   buildTopicTest as buildCosmoTopicTest,
   TOPIC_PROPORTIONS as COSMO_TOPIC_PROPORTIONS,
   TOPICS as COSMO_TOPICS,
+  MAX_FULL_EXAMS as COSMO_MAX_FULL_EXAMS,
+  MAX_TOPIC_EXAMS as COSMO_MAX_TOPIC_EXAMS,
+  getAdaptiveReinforcement as getCosmoAdaptiveReinforcement,
 } from './examEngine.js'
 import {
   buildBarberExam,
@@ -13,6 +16,8 @@ import {
   buildBarberTopicTest,
   BARBER_TOPIC_PROPORTIONS,
   BARBER_TOPICS,
+  BARBER_MAX_TOPIC_EXAMS,
+  getBarberAdaptiveReinforcement,
 } from './barberExamEngine.js'
 import {
   buildEsthiExam as buildEstheticianExam,
@@ -20,6 +25,8 @@ import {
   buildEsthiTopicTest as buildEstheticianTopicTest,
   ESTHI_TOPIC_PROPORTIONS as ESTHETICIAN_TOPIC_PROPORTIONS,
   ESTHI_TOPICS as ESTHETICIAN_TOPICS,
+  ESTHI_MAX_TOPIC_EXAMS as ESTHETICIAN_MAX_TOPIC_EXAMS,
+  getEsthiAdaptiveReinforcement as getEstheticianAdaptiveReinforcement,
 } from './esthiExamEngine.js'
 import {
   buildNailsExam,
@@ -27,7 +34,13 @@ import {
   buildNailsTopicTest,
   NAILS_TOPIC_PROPORTIONS,
   NAILS_TOPICS,
+  NAILS_MAX_TOPIC_EXAMS,
+  getNailsAdaptiveReinforcement,
 } from './nailsExamEngine.js'
+
+// Barber/esthetician/nails engines don't define their own full-exam cap —
+// reuse the cosmetology cap as the shared default for all license types.
+const SHARED_MAX_FULL_EXAMS = COSMO_MAX_FULL_EXAMS
 
 // CSS variable palettes per license — consumed by themeLoader.js
 export const LICENSE_THEMES = {
@@ -69,6 +82,9 @@ export function getExamEngine(licenseType) {
         buildTopicTest: buildCosmoTopicTest,
         proportions: COSMO_TOPIC_PROPORTIONS,
         topics: COSMO_TOPICS,
+        maxFullExams: COSMO_MAX_FULL_EXAMS,
+        maxTopicExams: COSMO_MAX_TOPIC_EXAMS,
+        getAdaptiveReinforcement: getCosmoAdaptiveReinforcement,
         theme: LICENSE_THEMES.cosmetology,
       }
     case 'barber':
@@ -78,6 +94,9 @@ export function getExamEngine(licenseType) {
         buildTopicTest: buildBarberTopicTest,
         proportions: BARBER_TOPIC_PROPORTIONS,
         topics: BARBER_TOPICS,
+        maxFullExams: SHARED_MAX_FULL_EXAMS,
+        maxTopicExams: BARBER_MAX_TOPIC_EXAMS,
+        getAdaptiveReinforcement: getBarberAdaptiveReinforcement,
         theme: LICENSE_THEMES.barber,
       }
     case 'esthetician':
@@ -87,6 +106,9 @@ export function getExamEngine(licenseType) {
         buildTopicTest: buildEstheticianTopicTest,
         proportions: ESTHETICIAN_TOPIC_PROPORTIONS,
         topics: ESTHETICIAN_TOPICS,
+        maxFullExams: SHARED_MAX_FULL_EXAMS,
+        maxTopicExams: ESTHETICIAN_MAX_TOPIC_EXAMS,
+        getAdaptiveReinforcement: getEstheticianAdaptiveReinforcement,
         theme: LICENSE_THEMES.esthetician,
       }
     case 'nails':
@@ -96,6 +118,9 @@ export function getExamEngine(licenseType) {
         buildTopicTest: buildNailsTopicTest,
         proportions: NAILS_TOPIC_PROPORTIONS,
         topics: NAILS_TOPICS,
+        maxFullExams: SHARED_MAX_FULL_EXAMS,
+        maxTopicExams: NAILS_MAX_TOPIC_EXAMS,
+        getAdaptiveReinforcement: getNailsAdaptiveReinforcement,
         theme: LICENSE_THEMES.nails,
       }
     default:

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, MAX_TOPIC_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
 import { ADMIN_EMAILS, getAdminExamEngines, getExamEngine, getLicenseLabel } from './examRouter.js'
 import { applyTheme } from './themeLoader.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
@@ -308,7 +307,7 @@ function StudyTimerWidget({ lang }) {
   )
 }
 
-function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDifficulty, adaptiveMode, setAdaptiveMode, tone, setTone, language, setLanguage, lang }) {
+function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficulty, setDifficulty, adaptiveMode, setAdaptiveMode, tone, setTone, language, setLanguage, lang }) {
   const hasSaved = !!load('brb_session')
   const history = load('brb_history') || []
   const lastFull = [...history].reverse().find(h => h.type === 'full')
@@ -445,7 +444,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
         </div>
         {(() => {
           const fullCount = (load('brb_history') || []).filter(h => h.type === 'full').length
-          const remaining = MAX_FULL_EXAMS - fullCount
+          const remaining = engine.maxFullExams - fullCount
           return (
             <div className="dash-card" onClick={() => remaining > 0 && onStart('full')} style={{ opacity: remaining === 0 ? 0.6 : 1 }}>
               <div className="dash-card-icon">📝</div>
@@ -453,7 +452,7 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
               <div className="dash-card-desc">100 questions · 90 min · PSI exam format</div>
               {lastFull && <div style={{ fontSize: '0.78rem', color: '#c8185a', marginTop: '4px' }}>Last score: {lastFull.score}%</div>}
               <div style={{ fontSize: '0.73rem', color: remaining > 3 ? '#7a5560' : '#c0392b', marginTop: '4px', fontWeight: '600' }}>
-                {remaining === 0 ? '✗ No exams remaining' : `${remaining} of ${MAX_FULL_EXAMS} ${t(lang, 'exams remaining')}`}
+                {remaining === 0 ? '✗ No exams remaining' : `${remaining} of ${engine.maxFullExams} ${t(lang, 'exams remaining')}`}
               </div>
               <div className="dash-card-action">{remaining > 0 ? t(lang, 'Start Exam') : 'Limit reached'}</div>
             </div>
@@ -485,9 +484,9 @@ function Dashboard({ user, onStart, feedbackOn, setFeedbackOn, difficulty, setDi
       <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px' }}>
         <div style={{ fontWeight: '600', color: '#c8185a', marginBottom: '14px', fontSize: '0.95rem' }}>{t(lang, 'Focused Topic Tests')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: '8px' }}>
-          {TOPICS.map(topic => {
+          {engine.topics.map(topic => {
             const attempts = topicAttempts[topic] || 0
-            const remaining = MAX_TOPIC_EXAMS - attempts
+            const remaining = engine.maxTopicExams - attempts
             const topicHistory = (load('brb_history') || []).filter(h => h.topic === topic)
             const lastScore = topicHistory.length > 0 ? topicHistory[topicHistory.length - 1].score : null
             return (
@@ -638,7 +637,7 @@ function NotePanel({ questionId, topic, lang }) {
   )
 }
 
-function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSubmit, onHome, lang }) {
+function ExamScreen({ mode, topic, examQuestions, engine, feedbackOn, adaptiveMode, onSubmit, onHome, lang }) {
   const totalTime = (mode === 'full' || mode === 'resume') ? EXAM_MINUTES * 60 : null
   const saved = mode === 'resume' ? load('brb_session') : null
   const examQs = examQuestions || []
@@ -701,7 +700,7 @@ function ExamScreen({ mode, topic, examQuestions, feedbackOn, adaptiveMode, onSu
     if (nextIdx < examQs.length) {
       setCurrent(nextIdx)
     } else if (adaptiveMode && wrongInSession.length > 0 && adaptiveQueue.length === 0) {
-      const reinforcement = getAdaptiveReinforcement(wrongInSession, examQs)
+      const reinforcement = engine.getAdaptiveReinforcement(wrongInSession, examQs)
       if (reinforcement.length > 0) { setAdaptiveQueue(reinforcement); setCurrent(examQs.length) }
       else handleSubmit()
     } else {
@@ -1077,7 +1076,7 @@ function StudyGuidePage({ onHome, tone, language, lang }) {
   )
 }
 
-function StatsPage({ lang }) {
+function StatsPage({ lang, engine }) {
   const history = load('brb_history') || []
   const topicAttempts = load('brb_topic_attempts') || {}
   const totalQs = history.reduce((s, h) => s + (h.total || 0), 0)
@@ -1119,7 +1118,7 @@ function StatsPage({ lang }) {
       )}
       <div style={{ background: 'white', border: '1px solid #ecd5db', borderRadius: '12px', padding: '20px 24px', marginBottom: '16px' }}>
         <div style={{ fontWeight: '600', color: '#c8185a', marginBottom: '16px' }}>Topic Performance</div>
-        {TOPICS.map(topic => {
+        {engine.topics.map(topic => {
           const data = topicStats[topic]
           const pct = data && data.total > 0 ? Math.round((data.correct / data.total) * 100) : null
           const color = pct === null ? '#d0c0c5' : pct >= 80 ? '#2d7a4f' : pct >= 60 ? '#e08020' : '#C0506A'
@@ -1351,6 +1350,7 @@ export default function App() {
   const [pendingUser, setPendingUser] = useState(null)
 
   const lang = language
+  const engine = licenseEngine ?? getExamEngine('cosmetology')
 
   const handleLogin = (u) => {
     const accepted = localStorage.getItem('brb_agreed_to_terms') === 'true'
@@ -1384,19 +1384,19 @@ export default function App() {
     setExamMode(mode); setExamTopic(topic); setResults(null)
     if (mode === 'resume') {
       const saved = load('brb_session')
-      setExamQuestions(saved?.questions || buildFullExam())
+      setExamQuestions(saved?.questions || engine.build())
     } else if (mode === 'pretest') {
-      setExamQuestions(buildPreTest())
+      setExamQuestions(engine.buildPreTest())
     } else if (mode === 'topic') {
       const attempts = load('brb_topic_attempts') || {}
       const attemptIndex = attempts[topic] || 0
-      if (attemptIndex >= MAX_TOPIC_EXAMS) { alert(`You've completed all ${MAX_TOPIC_EXAMS} focused exams for this topic.`); return }
-      setExamQuestions(buildTopicTest(topic, attemptIndex))
+      if (attemptIndex >= engine.maxTopicExams) { alert(`You've completed all ${engine.maxTopicExams} focused exams for this topic.`); return }
+      setExamQuestions(engine.buildTopicTest(topic, attemptIndex))
     } else {
       const hist = load('brb_history') || []
       const fullCount = hist.filter(h => h.type === 'full').length
-      if (fullCount >= MAX_FULL_EXAMS) { alert(`You've used all ${MAX_FULL_EXAMS} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`); return }
-      setExamQuestions(buildFullExam(difficulty))
+      if (fullCount >= engine.maxFullExams) { alert(`You've used all ${engine.maxFullExams} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`); return }
+      setExamQuestions(engine.build(difficulty))
     }
     setScreen('exam')
   }
@@ -1429,7 +1429,7 @@ export default function App() {
       {screen === 'license-select' && <LicenseSelector onSelect={handleSelectLicense} />}
       {screen === 'dashboard' && (
         <Dashboard
-          user={user} onStart={handleStart}
+          user={user} onStart={handleStart} engine={engine}
           feedbackOn={feedbackOn} setFeedbackOn={setFeedbackOn}
           difficulty={difficulty} setDifficulty={(d) => { setDifficulty(d); save('brb_difficulty', d) }}
           adaptiveMode={adaptiveMode} setAdaptiveMode={(v) => { setAdaptiveMode(v); save('brb_adaptive', v) }}
@@ -1438,12 +1438,12 @@ export default function App() {
           lang={lang}
         />
       )}
-      {screen === 'stats' && <StatsPage lang={lang} />}
+      {screen === 'stats' && <StatsPage lang={lang} engine={engine} />}
       {screen === 'studyguide' && <StudyGuidePage onHome={() => setScreen('dashboard')} tone={tone} language={language} lang={lang} />}
       {screen === 'notes' && <MyNotesPage lang={lang} />}
       {screen === 'exam' && (
         <ExamScreen
-          mode={examMode} topic={examTopic} examQuestions={examQuestions}
+          mode={examMode} topic={examTopic} examQuestions={examQuestions} engine={engine}
           feedbackOn={feedbackOn} adaptiveMode={adaptiveMode}
           onSubmit={handleSubmit} onHome={() => setScreen('dashboard')}
           lang={lang}
