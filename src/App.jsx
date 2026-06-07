@@ -1352,6 +1352,8 @@ export default function App() {
   const lang = language
   const engine = licenseEngine ?? getExamEngine('cosmetology')
   console.log('engine resolved:', engine?.theme?.primary, 'licenseEngine null?', licenseEngine === null)
+  const engineRef = useRef(engine)
+  useEffect(() => { engineRef.current = engine }, [engine])
 
   const handleLogin = (u) => {
     const accepted = localStorage.getItem('brb_agreed_to_terms') === 'true'
@@ -1387,22 +1389,23 @@ export default function App() {
 
   const handleStart = (mode, topic = null) => {
     if (mode === 'studyguide') { setScreen('studyguide'); return }
+    const eng = engineRef.current
     setExamMode(mode); setExamTopic(topic); setResults(null)
     if (mode === 'resume') {
       const saved = load('brb_session')
-      setExamQuestions(saved?.questions || engine.build())
+      setExamQuestions(saved?.questions || eng.build())
     } else if (mode === 'pretest') {
-      setExamQuestions(engine.buildPreTest())
+      setExamQuestions(eng.buildPreTest())
     } else if (mode === 'topic') {
       const attempts = load('brb_topic_attempts') || {}
       const attemptIndex = attempts[topic] || 0
-      if (attemptIndex >= engine.maxTopicExams) { alert(`You've completed all ${engine.maxTopicExams} focused exams for this topic.`); return }
-      setExamQuestions(engine.buildTopicTest(topic, attemptIndex))
+      if (attemptIndex >= eng.maxTopicExams) { alert(`You've completed all ${eng.maxTopicExams} focused exams for this topic.`); return }
+      setExamQuestions(eng.buildTopicTest(topic, attemptIndex))
     } else {
       const hist = load('brb_history') || []
       const fullCount = hist.filter(h => h.type === 'full').length
-      if (fullCount >= engine.maxFullExams) { alert(`You've used all ${engine.maxFullExams} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`); return }
-      setExamQuestions(engine.build(difficulty))
+      if (fullCount >= eng.maxFullExams) { alert(`You've used all ${eng.maxFullExams} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`); return }
+      setExamQuestions(eng.build(difficulty))
     }
     setScreen('exam')
   }
