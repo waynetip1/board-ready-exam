@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ADMIN_EMAILS, getAdminExamEngines, getExamEngine, getLicenseLabel } from './examRouter.js'
-import { applyTheme } from './themeLoader.js'
+import { applyTheme, resetTheme } from './themeLoader.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 import { t } from './translations.js'
 const APP_VERSION = '1.1.0'
@@ -1363,10 +1363,14 @@ export default function App() {
     setScreen(isAdminUser(pendingUser) ? 'license-select' : 'dashboard')
   }
   const handleTermsDecline = () => { setPendingUser(null); setShowTerms(false) }
-  const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null); setLicenseEngine(null) }
+  const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null); setLicenseEngine(null); resetTheme() }
   const handleSelectLicense = (licenseType) => {
     const engine = getExamEngine(licenseType)
+    // Drop any in-progress session from a previously selected license so
+    // "Resume" can't hand the admin a stale cross-license question set.
+    clear('brb_session')
     setLicenseEngine(engine)
+    setExamQuestions(null)
     applyTheme(engine.theme)
     setScreen('dashboard')
   }
