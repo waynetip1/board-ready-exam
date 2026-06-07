@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { buildFullExam, buildPreTest, buildTopicTest, TOPICS, TOPIC_PROPORTIONS, MAX_FULL_EXAMS, MAX_TOPIC_EXAMS, getAdaptiveReinforcement } from './examEngine.js'
+import { ADMIN_EMAILS, getAdminExamEngines, getExamEngine, getLicenseLabel } from './examRouter.js'
+import { applyTheme } from './themeLoader.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 import { t } from './translations.js'
 const APP_VERSION = '1.1.0'
@@ -1301,9 +1303,41 @@ function Results({ results, mode, topic, onRetake, onHome, onStudyGuide, lang })
   )
 }
 
+const ADMIN_LICENSE_TYPES = ['cosmetology', 'barber', 'esthetician', 'nails']
+
+function LicenseSelector({ onSelect }) {
+  const engines = getAdminExamEngines()
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh', padding: '24px' }}>
+      <div style={{ background: '#fff', borderRadius: '16px', padding: '36px 32px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', textAlign: 'center', maxWidth: '420px', width: '100%' }}>
+        <h2 style={{ marginBottom: '8px' }}>Select an Exam</h2>
+        <p style={{ color: '#7a5560', marginBottom: '24px' }}>Admin access — choose a license to preview</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {ADMIN_LICENSE_TYPES.map((licenseType, i) => (
+            <button
+              key={licenseType}
+              onClick={() => onSelect(licenseType)}
+              style={{ background: engines[i].theme.primary, color: '#fff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              {getLicenseLabel(licenseType)}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const isAdminUser = (u) => !!u?.email && ADMIN_EMAILS.includes(u.email.toLowerCase())
+
 export default function App() {
   const [user, setUser] = useState(() => load('brb_user') || null)
-  const [screen, setScreen] = useState(() => load('brb_user') ? 'dashboard' : 'login')
+  const [screen, setScreen] = useState(() => {
+    const u = load('brb_user')
+    if (!u) return 'login'
+    return isAdminUser(u) ? 'license-select' : 'dashboard'
+  })
+  const [licenseEngine, setLicenseEngine] = useState(null)
   const [examMode, setExamMode] = useState(null)
   const [examTopic, setExamTopic] = useState(null)
   const [results, setResults] = useState(null)
@@ -1321,14 +1355,28 @@ export default function App() {
   const handleLogin = (u) => {
     const accepted = localStorage.getItem('brb_agreed_to_terms') === 'true'
     if (!accepted) { setPendingUser(u); setShowTerms(true) }
-    else { save('brb_user', u); setUser(u); setScreen('dashboard') }
+    else { save('brb_user', u); setUser(u); setScreen(isAdminUser(u) ? 'license-select' : 'dashboard') }
   }
   const handleTermsAccept = () => {
     localStorage.setItem('brb_agreed_to_terms', 'true')
-    save('brb_user', pendingUser); setUser(pendingUser); setPendingUser(null); setShowTerms(false); setScreen('dashboard')
+    save('brb_user', pendingUser); setUser(pendingUser); setPendingUser(null); setShowTerms(false)
+    setScreen(isAdminUser(pendingUser) ? 'license-select' : 'dashboard')
   }
   const handleTermsDecline = () => { setPendingUser(null); setShowTerms(false) }
-  const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null) }
+  const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null); setLicenseEngine(null) }
+  const handleSelectLicense = (licenseType) => {
+    const engine = getExamEngine(licenseType)
+    setLicenseEngine(engine)
+    applyTheme(engine.theme)
+    setScreen('dashboard')
+  }
+
+  useEffect(() => {
+    if (!user || isAdminUser(user)) return
+    const engine = getExamEngine(user.passboard_license_type || 'cosmetology')
+    setLicenseEngine(engine)
+    applyTheme(engine.theme)
+  }, [user])
   const handleNav = (s) => { setScreen(s); setResults(null) }
 
   const handleStart = (mode, topic = null) => {
@@ -1378,6 +1426,7 @@ export default function App() {
     <>
       <Header user={user} onLogout={handleLogout} screen={screen} onNav={handleNav} lang={lang} />
       {screen === 'login' && <Login onLogin={handleLogin} />}
+      {screen === 'license-select' && <LicenseSelector onSelect={handleSelectLicense} />}
       {screen === 'dashboard' && (
         <Dashboard
           user={user} onStart={handleStart}
