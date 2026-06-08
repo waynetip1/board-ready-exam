@@ -77,6 +77,7 @@ export function getExamEngine(licenseType) {
   switch (licenseType) {
     case 'cosmetology':
       return {
+        licenseType: 'cosmetology',
         build: buildCosmoExam,
         buildPreTest: buildCosmoPreTest,
         buildTopicTest: buildCosmoTopicTest,
@@ -89,6 +90,7 @@ export function getExamEngine(licenseType) {
       }
     case 'barber':
       return {
+        licenseType: 'barber',
         build: buildBarberExam,
         buildPreTest: buildBarberPreTest,
         buildTopicTest: buildBarberTopicTest,
@@ -101,6 +103,7 @@ export function getExamEngine(licenseType) {
       }
     case 'esthetician':
       return {
+        licenseType: 'esthetician',
         build: buildEstheticianExam,
         buildPreTest: buildEstheticianPreTest,
         buildTopicTest: buildEstheticianTopicTest,
@@ -113,6 +116,7 @@ export function getExamEngine(licenseType) {
       }
     case 'nails':
       return {
+        licenseType: 'nails',
         build: buildNailsExam,
         buildPreTest: buildNailsPreTest,
         buildTopicTest: buildNailsTopicTest,

@@ -313,6 +313,8 @@ function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficult
   const lastFull = [...history].reverse().find(h => h.type === 'full')
   const topicAttempts = load('brb_topic_attempts') || {}
   const hasFullExam = history.some(h => h.type === 'full')
+  const totalExamQuestions = Object.values(engine.proportions).reduce((a, b) => a + b, 0)
+  const preTestCount = Math.round(totalExamQuestions * 0.2)
 
   return (
     <div className="intro-wrap" style={{ maxWidth: '760px' }}>
@@ -324,6 +326,19 @@ function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficult
 
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
         <div>
+          <div style={{
+            display: 'inline-block',
+            background: engine.theme.primary,
+            color: '#fff',
+            fontSize: '0.75rem',
+            fontWeight: '700',
+            letterSpacing: '0.08em',
+            padding: '3px 10px',
+            borderRadius: '20px',
+            marginBottom: '16px'
+          }}>
+            {getLicenseLabel(engine.licenseType ?? 'cosmetology').toUpperCase()} EXAM
+          </div>
           <div className="intro-title">{t(lang, 'Welcome back')}, {(user.name || '').split('.')[0] || 'Student'}!</div>
           <div className="intro-sub">{t(lang, 'What would you like to study today?')}</div>
         </div>
@@ -439,7 +454,7 @@ function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficult
         <div className="dash-card" onClick={() => onStart('pretest')}>
           <div className="dash-card-icon">🎯</div>
           <div className="dash-card-title">{t(lang, 'Pre-Test Diagnostic')}</div>
-          <div className="dash-card-desc">20 questions · No timer · Identifies your weak areas</div>
+          <div className="dash-card-desc">{preTestCount} questions · No timer · Identifies your weak areas</div>
           <div className="dash-card-action">{t(lang, 'Start Diagnostic')}</div>
         </div>
         {(() => {
@@ -449,7 +464,7 @@ function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficult
             <div className="dash-card" onClick={() => remaining > 0 && onStart('full')} style={{ opacity: remaining === 0 ? 0.6 : 1 }}>
               <div className="dash-card-icon">📝</div>
               <div className="dash-card-title">{t(lang, 'Full Practice Exam')}</div>
-              <div className="dash-card-desc">100 questions · 90 min · PSI exam format</div>
+              <div className="dash-card-desc">{totalExamQuestions} questions · 90 min · PSI exam format</div>
               {lastFull && <div style={{ fontSize: '0.78rem', color: '#c8185a', marginTop: '4px' }}>Last score: {lastFull.score}%</div>}
               <div style={{ fontSize: '0.73rem', color: remaining > 3 ? '#7a5560' : '#c0392b', marginTop: '4px', fontWeight: '600' }}>
                 {remaining === 0 ? '✗ No exams remaining' : `${remaining} of ${engine.maxFullExams} ${t(lang, 'exams remaining')}`}
