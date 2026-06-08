@@ -3,7 +3,7 @@ import { ADMIN_EMAILS, getAdminExamEngines, getExamEngine, getLicenseLabel } fro
 import { applyTheme, resetTheme } from './themeLoader.js'
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, TERMS_VERSION, TERMS_DATE } from './legal.js'
 import { t } from './translations.js'
-const APP_VERSION = '1.1.0'
+const APP_VERSION = '1.2.0'
 
 const EXAM_MINUTES = 90
 const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)) } catch(e) {} }
@@ -656,7 +656,6 @@ function ExamScreen({ mode, topic, examQuestions, engine, feedbackOn, adaptiveMo
   const totalTime = (mode === 'full' || mode === 'resume') ? EXAM_MINUTES * 60 : null
   const saved = mode === 'resume' ? load('brb_session') : null
   const examQs = examQuestions || []
-  console.log('ExamScreen mounted:', examQs.length, 'questions, first topic:', examQs[0]?.topic, 'mode:', mode)
   const [adaptiveQueue, setAdaptiveQueue] = useState([])
   const [wrongInSession, setWrongInSession] = useState([])
   const [current, setCurrent] = useState(saved?.current || 0)
@@ -1367,7 +1366,6 @@ export default function App() {
 
   const lang = language
   const engine = licenseEngine ?? getExamEngine('cosmetology')
-  console.log('engine resolved:', engine?.theme?.primary, 'licenseEngine null?', licenseEngine === null)
   const engineRef = useRef(engine)
   useEffect(() => { engineRef.current = engine }, [engine])
 
@@ -1384,7 +1382,6 @@ export default function App() {
   const handleTermsDecline = () => { setPendingUser(null); setShowTerms(false) }
   const handleLogout = () => { clear('brb_user'); setUser(null); setScreen('login'); setResults(null); setLicenseEngine(null); resetTheme() }
   const handleSelectLicense = (licenseType) => {
-    console.log('handleSelectLicense called with:', licenseType)
     const engine = getExamEngine(licenseType)
     // Drop any in-progress session from a previously selected license so
     // "Resume" can't hand the admin a stale cross-license question set.
@@ -1422,7 +1419,6 @@ export default function App() {
       const fullCount = hist.filter(h => h.type === 'full').length
       if (fullCount >= eng.maxFullExams) { alert(`You've used all ${eng.maxFullExams} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`); return }
       const built = eng.build(difficulty)
-      console.log('handleStart built:', built.length, 'questions, first topic:', built[0]?.topic)
       setExamQuestions(built)
     }
     setScreen('exam')
