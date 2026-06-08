@@ -641,6 +641,7 @@ function ExamScreen({ mode, topic, examQuestions, engine, feedbackOn, adaptiveMo
   const totalTime = (mode === 'full' || mode === 'resume') ? EXAM_MINUTES * 60 : null
   const saved = mode === 'resume' ? load('brb_session') : null
   const examQs = examQuestions || []
+  console.log('ExamScreen mounted:', examQs.length, 'questions, first topic:', examQs[0]?.topic, 'mode:', mode)
   const [adaptiveQueue, setAdaptiveQueue] = useState([])
   const [wrongInSession, setWrongInSession] = useState([])
   const [current, setCurrent] = useState(saved?.current || 0)
@@ -1405,7 +1406,9 @@ export default function App() {
       const hist = load('brb_history') || []
       const fullCount = hist.filter(h => h.type === 'full').length
       if (fullCount >= eng.maxFullExams) { alert(`You've used all ${eng.maxFullExams} of your included full practice exams. Contact support@boardreadybeauty.com if you need additional access.`); return }
-      setExamQuestions(eng.build(difficulty))
+      const built = eng.build(difficulty)
+      console.log('handleStart built:', built.length, 'questions, first topic:', built[0]?.topic)
+      setExamQuestions(built)
     }
     setScreen('exam')
   }
