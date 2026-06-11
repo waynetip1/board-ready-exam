@@ -31,11 +31,15 @@ export default async function handler(req, res) {
     })
     const userData = await userRes.json()
 
+    const parts = data.data.jwt.split('.')
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
+    const licenseType = payload.passboard_license_type || ''
+
     res.status(200).json({
       jwt: data.data.jwt,
       userId: userData.id,
       name: userData.name || userData.slug || email.split('@')[0],
-      passboard_license_type: userData.meta?.passboard_license_type || ''
+      passboard_license_type: licenseType
     })
   } catch (err) {
     console.error('Auth error:', err)
