@@ -71,7 +71,7 @@ export const LICENSE_THEMES = {
 }
 
 // Accounts that bypass license type and can access all four exams
-export const ADMIN_EMAILS = ['tonythumbs725@gmail.com', 'wayne.tipton@gmail.com']
+export const ADMIN_EMAILS = ['wayne.tipton@gmail.com']
 
 export function getExamEngine(licenseType) {
   switch (licenseType) {
