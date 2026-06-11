@@ -162,7 +162,7 @@ function Login({ onLogin }) {
       const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
       const data = await res.json()
       if (!res.ok || !data.jwt) { setError(data.error || 'Invalid email or password.'); setLoading(false); return }
-      onLogin({ email, name: data.name, jwt: data.jwt })
+      onLogin({ email, name: data.name, jwt: data.jwt, passboard_license_type: data.passboard_license_type || '' })
     } catch { setError('Connection error. Please try again.') }
     setLoading(false)
   }

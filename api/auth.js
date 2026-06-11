@@ -34,7 +34,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       jwt: data.data.jwt,
       userId: userData.id,
-      name: userData.name || userData.slug || email.split('@')[0]
+      name: userData.name || userData.slug || email.split('@')[0],
+      passboard_license_type: userData.meta?.passboard_license_type || ''
     })
   } catch (err) {
     console.error('Auth error:', err)
