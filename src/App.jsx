@@ -1345,7 +1345,19 @@ function LicenseSelector({ onSelect }) {
 const isAdminUser = (u) => !!u?.email && ADMIN_EMAILS.includes(u.email.toLowerCase())
 
 export default function App() {
-  const [user, setUser] = useState(() => load('brb_user') || null)
+  const [user, setUser] = useState(() => {
+    const u = load('brb_user')
+    if (!u) return null
+    if (!u.passboard_license_type && u.jwt) {
+      try {
+        const b64 = u.jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+        const payload = JSON.parse(atob(b64))
+        u.passboard_license_type = payload.passboard_license_type || ''
+        save('brb_user', u)
+      } catch {}
+    }
+    return u
+  })
   const [screen, setScreen] = useState(() => {
     const u = load('brb_user')
     if (!u) return 'login'
