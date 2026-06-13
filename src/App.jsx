@@ -316,6 +316,25 @@ function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficult
   const totalExamQuestions = Object.values(engine.proportions).reduce((a, b) => a + b, 0)
   const preTestCount = Math.round(totalExamQuestions * 0.2)
 
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches
+  const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent)
+  const isIOS = /iPhone|iPad/i.test(navigator.userAgent)
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem('brb_pwa_dismissed') === 'true')
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e) }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+  const handleDismiss = () => { localStorage.setItem('brb_pwa_dismissed', 'true'); setDismissed(true) }
+  const handleInstall = async () => {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    await deferredPrompt.userChoice
+    setDeferredPrompt(null)
+    setDismissed(true)
+  }
+
   return (
     <div className="intro-wrap" style={{ maxWidth: '760px' }}>
       {/* Exam countdown + study timer row */}
@@ -339,6 +358,34 @@ function Dashboard({ user, onStart, engine, feedbackOn, setFeedbackOn, difficult
           }}>
             {getLicenseLabel(engine.licenseType ?? 'cosmetology').toUpperCase()} EXAM
           </div>
+          {!isPWA && isMobile && !dismissed && (
+            <div style={{
+              background: '#1e1a20', color: '#fff', borderRadius: '12px',
+              padding: '12px 16px', marginBottom: '16px', display: 'flex',
+              alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+              fontSize: '0.85rem'
+            }}>
+              <span>
+                {isIOS
+                  ? 'Add PassBoard to your home screen: tap Share › Add to Home Screen'
+                  : 'Add PassBoard to your home screen for quick access'}
+              </span>
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                {!isIOS && deferredPrompt && (
+                  <button onClick={handleInstall} style={{
+                    background: '#c8185a', border: 'none', color: '#fff',
+                    borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
+                    fontSize: '0.78rem', fontWeight: '600'
+                  }}>Install</button>
+                )}
+                <button onClick={handleDismiss} style={{
+                  background: 'none', border: '1px solid rgba(255,255,255,0.3)',
+                  color: '#fff', borderRadius: '8px', padding: '6px 10px',
+                  cursor: 'pointer', fontSize: '0.78rem'
+                }}>Dismiss</button>
+              </div>
+            </div>
+          )}
           <div className="intro-title">{t(lang, 'Welcome back')}, {(user.name || '').split('.')[0] || 'Student'}!</div>
           <div className="intro-sub">{t(lang, 'What would you like to study today?')}</div>
         </div>
